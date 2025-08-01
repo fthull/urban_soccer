@@ -178,11 +178,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         <label>Jam Baru:</label>
         <select name="jam" required>
           <?php
-          $start = strtotime("08:00");
+          $start = strtotime("07:00");
           $end = strtotime("23:00");
           while ($start <= $end) {
               echo "<option value='" . date("H:i", $start) . "'>" . date("H:i", $start) . "</option>";
-              $start = strtotime("+90 minutes", $start);
+              $start = strtotime("+120 minutes", $start);
           }
           ?>
         </select>
@@ -286,7 +286,7 @@ function loadJamOptions(tanggal) {
   fetch("?get_booked_times=1&tanggal=" + tanggal)
     .then(res => res.json())
     .then(booked => {
-      const semuaJam = generateJamOptions("08:00", "23:00", 90); // 90 = 1.5 jam
+      const semuaJam = generateJamOptions("07:00", "23:00", 120); // 90 = 2 jam
       semuaJam.forEach(jam => {
         if (!booked.includes(jam)) {
           const option = document.createElement("option");
