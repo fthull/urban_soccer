@@ -170,7 +170,7 @@
         window.addEventListener('resize', updateSlider);
         updateSlider();
 
-        setInterval(slide, 4000);
+        setInterval(slide, 5000);
     </script>
     
     
