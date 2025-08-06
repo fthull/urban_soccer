@@ -1,0 +1,400 @@
+/* ======================== */
+/* Global & Base Styles   */
+/* ======================== */
+
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #f0f0f0;
+  --dark-color: #212529;
+  --light-color: #ffffff;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+}
+
+body {
+  font-family: var(--font-poppins);
+  color: var(--dark-color);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ======================== */
+/* Header & Hero Section  */
+/* ======================== */
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: transparent;
+  box-shadow: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.header.hidden {
+  transform: translateY(-100%);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+}
+
+.logo img {
+  width: 118px;
+  transition: filter 0.3s ease;
+}
+
+.navbar-menu .nav-links {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 2rem;
+}
+
+.navbar-menu .nav-link {
+  font-weight: 600;
+  color: var(--light-color);
+  transition: color 0.3s ease;
+}
+
+.navbar-menu .nav-link:hover {
+  color: var(--primary-color);
+}
+
+/* Style untuk header saat di-scroll */
+.header.scrolled {
+  background-color: var(--light-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header.scrolled .logo img {
+  filter: none;
+}
+
+.header.scrolled .nav-link {
+  color: var(--dark-color);
+}
+
+/* Hero Section tetap sama */
+.hero-section {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  color: var(--light-color);
+  overflow: hidden;
+}
+
+.banner-slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.slides {
+  display: flex;
+  width: 300%;
+  height: 100%;
+  transition: transform 1s ease-in-out;
+}
+
+.slide {
+  width: 33.333%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.6);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+}
+
+.btn-book {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  font-size: 1.25rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-book:hover {
+  background-color: #388E3C;
+  transform: translateY(-2px);
+}
+
+/* ======================== */
+/* Booking Section     */
+/* ======================== */
+
+.booking-section {
+  background-color: var(--secondary-color);
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-montserrat);
+}
+
+#calendar-container {
+  background-color: var(--light-color);
+}
+
+.btn-primary-custom {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+  background-color: #388E3C;
+  transform: translateY(-2px);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--light-color);
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h4 {
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-content form div {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.modal-content label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.modal-content input, .modal-content select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.modal-content button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0 0.5rem;
+}
+
+.modal-content button[type="submit"] {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+}
+
+.modal-content button[type="button"] {
+  background-color: #e0e0e0;
+  color: var(--dark-color);
+}
+
+/* ======================== */
+/* About Section      */
+/* ======================== */
+
+.about-section {
+  position: relative;
+}
+/* Tailwind classes handle most styling here, but these are good base styles */
+
+/* ======================== */
+/* Gallery Section     */
+/* ======================== */
+
+.gallery-section {
+  background-color: var(--light-color);
+}
+
+/* ======================== */
+/* Footer Section      */
+/* ======================== */
+
+.footer-section {
+  background-color: var(--dark-color);
+  color: #f8f9fa;
+  padding-top: 4rem;
+  padding-bottom: 1rem;
+}
+
+.footer-col {
+  margin-bottom: 2rem;
+}
+
+.footer-logo {
+  max-width: 150px;
+  margin-bottom: 1rem;
+}
+
+.footer-description {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-form {
+  display: flex;
+}
+
+.footer-form input {
+  flex-grow: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px 0 0 5px;
+}
+
+.footer-form button {
+  background-color: var(--primary-color);
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0 5px 5px 0;
+  color: var(--light-color);
+}
+
+.footer-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+  color: #e9ecef;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: var(--primary-color);
+}
+
+.footer-contact p {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.footer-contact .icon-green {
+  color: var(--primary-color);
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.footer-social-icons {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0 0;
+  gap: 1rem;
+}
+
+.footer-social-icons a {
+  color: var(--light-color);
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.footer-social-icons a:hover {
+  color: var(--primary-color);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.footer-bottom a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* ======================== */
+/* Media Queries      */
+/* ======================== */
+
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .navbar-menu {
+    margin-top: 1rem;
+  }
+  .navbar-menu .nav-links {
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  .hero-content p {
+    font-size: 1rem;
+  }
+  .footer-col {
+    text-align: center;
+  }
+  .footer-contact p {
+    justify-content: center;
+  }
+  .footer-social-icons {
+    justify-content: center;
+  }
+}

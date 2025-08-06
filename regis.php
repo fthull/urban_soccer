@@ -27,18 +27,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // store_result() digunakan untuk menyimpan hasil query dari statement yang dieksekusi ke dalam memori lokal, sehingga bisa diakses nanti — misalnya untuk menghitung jumlah baris hasil dengan num_rows.
     $check->store_result();
 
-<<<<<<< HEAD
   $sql = "INSERT INTO mencuci (username, password) VALUES (?, ? )";
-=======
-<<<<<<< HEAD
 // Menambahkan data username dan password ke tabel mencuci dengan cara yang aman menggunakan Prepared Statement.
     // Ini adalah query SQL yang digunakan untuk menambahkan data baru ke dalam tabel mencuci.
   $sql = "INSERT INTO mencuci (username, password) VALUES (?, ? )";
   // Ini adalah langkah untuk menyiapkan (prepare) perintah SQL sebelum dijalankan, menggunakan Prepared Statement dari MySQLi.
-=======
   $sql = "INSERT INTO users (username, password) VALUES (?, ? )";
->>>>>>> upstream/main
->>>>>>> fcdb753adb7ac9d98cd4ff82d4ae0abaff01391f
   $stmt = $conn->prepare($sql);
   // Baris ini mengisi placeholder (?) dalam query dengan nilai yang kamu punya.
   // $username akan menggantikan tanda ? pertama.
@@ -50,21 +44,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($check->num_rows > 0) {
       $message = "Username sudah digunakan. Silakan pilih yang lain.";
     } else {
-<<<<<<< HEAD
       //  menambahkan data pengguna baru ke dalam tabel mencuci.
       $sql = "INSERT INTO mencuci (username, password, role) VALUES (?, ?, ?)";
       // Kode ini digunakan untuk menyiapkan (prepare) query SQL yang sebelumnya sudah ditulis di variabel $sql, agar bisa dijalankan dengan prepared statement dari MySQLi.
       $stmt = $conn->prepare($sql);
       // Kode ini berfungsi untuk mengikat data (bind) ke query SQL yang sebelumnya sudah disiapkan dengan prepare().
       $stmt->bind_param("sss", $username, $password, $inputRole);
-=======
       // Simpan ke database
 
       $sql = "INSERT INTO mencuci (username, password ) VALUES (?, ?)";
 
       $stmt = $conn->prepare($sql);
       $stmt->bind_param("ss", $username, $password);
->>>>>>> upstream/main
 
 
       // cek apakah eksekusinya berhasil atau tidak.
@@ -82,8 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $check->close();
-  }
-}
 ?>
 
 
