@@ -36,14 +36,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
 
 // Data kalender
 $events = [];
-$result = $conn->query("SELECT nama, waktu FROM booking ORDER BY waktu ASC");
+$result = $conn->query("SELECT nama, waktu, status FROM booking where waktu >= now() ORDER BY waktu ASC");
+
+$events = [];
 while ($row = $result->fetch_assoc()) {
+    $status = $row['status'] === 'Booked' ? 'Booked' : 'Process';
+    $color = $status === 'Booked' ? '#28a745' : '#ffc107';
+
     $events[] = [
-        'title' => 'Booked: ' . ' (' . date('H:i', strtotime($row['waktu'])) . ')',
+        'title' => $status . ': ' . ' (' . date('H:i', strtotime($row['waktu'])) . ')',
         'start' => date('c', strtotime($row['waktu'])), // Format ISO 8601
-        'allDay' => false
+        'allDay' => false,
+        'color' => $color
     ];
 }
+
+
 
 if (isset($_GET['get_booked_times']) && isset($_GET['tanggal'])) {
     $tanggal = $_GET['tanggal'];
@@ -145,16 +153,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 <!-- Modal Booking -->
 <div id="bookingModal" class="modal">
   <div class="modal-content">
-    <h4>Booking Urban Soccer</h4>
+    <h4>Booking Field</h4>
     <form id="bookingForm">
       <input type="hidden" id="tanggal" name="tanggal" />
       <div><label>Nama:</label><input type="text" name="nama" required></div>
       <div><label>No HP:</label><input type="text" name="no_hp" required></div>
       <div>
-        <label>Jam:</label>
+
         <div>
   <label>Jam:</label>
-  <select name="jam" id="jamDropdown" required></select>
+  <select name="jam" id="jamDropdown" required>
+     
+  </select>
 </div>
 
       </div>
@@ -174,19 +184,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
       <div><label>Nama:</label><input type="text" name="nama" required></div>
       <div><label>No HP:</label><input type="text" name="no_hp" required></div>
       <div><label>Tanggal Baru:</label><input type="date" name="tanggal" required></div>
-      <div>
-        <label>Jam Baru:</label>
-        <select name="jam" required>
-          <?php
-          $start = strtotime("07:00");
-          $end = strtotime("23:00");
-          while ($start <= $end) {
-              echo "<option value='" . date("H:i", $start) . "'>" . date("H:i", $start) . "</option>";
-              $start = strtotime("+120 minutes", $start);
-          }
-          ?>
-        </select>
-      </div>
+        <div>
+  <label>Jam Baru:</label>
+  <select name="jam" id="jamDropdownChange" required>
+     
+  </select>
+</div>
       <div style="margin-top: 10px;">
         <button type="submit">Update Booking</button>
         <button type="button" onclick="closeChangeModal()">Batal</button>
@@ -286,14 +289,105 @@ function loadJamOptions(tanggal) {
   fetch("?get_booked_times=1&tanggal=" + tanggal)
     .then(res => res.json())
     .then(booked => {
-      const semuaJam = generateJamOptions("07:00", "23:00", 120); // 90 = 2 jam
-      semuaJam.forEach(jam => {
-        if (!booked.includes(jam)) {
-          const option = document.createElement("option");
-          option.value = jam;
-          option.textContent = jam;
-          dropdown.appendChild(option);
+      // Sort booked times just in case they're not in order
+      booked.sort();
+      
+      const semuaJam = generateJamOptions("07:00", "24:00", 120); // 120 minutes = 2 hours
+      const availableSlots = [];
+      
+      // Generate available time slots with their end times
+      for (let i = 0; i < semuaJam.length; i++) {
+        const startTime = semuaJam[i];
+        
+        // Skip if this time is booked
+        if (booked.includes(startTime)) continue;
+        
+        // Calculate end time (10 minutes before next slot or closing time)
+        let endTime;
+        if (i < semuaJam.length - 1) {
+          // Parse next time to calculate 10 minutes before it
+          const nextTime = semuaJam[i+1];
+          const [nextH, nextM] = nextTime.split(":").map(Number);
+          const nextDate = new Date(0, 0, 0, nextH, nextM);
+          nextDate.setMinutes(nextDate.getMinutes() - 10); // 10 minutes before
+          
+          endTime = 
+            String(nextDate.getHours()).padStart(2, '0') + ":" + 
+            String(nextDate.getMinutes()).padStart(2, '0');
+        } else {
+          // For the last slot, end time is 10 minutes before closing (23:00)
+          endTime = "00:50";
         }
+        
+        availableSlots.push({
+          start: startTime,
+          end: endTime
+        });
+      }
+
+      // Populate dropdown with formatted options
+      availableSlots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot.start;
+        option.textContent = `${slot.start} - ${slot.end}`;
+        dropdown.appendChild(option);
+      });
+
+      if (dropdown.options.length === 0) {
+        const option = document.createElement("option");
+        option.text = "Tidak ada jam tersedia";
+        option.disabled = true;
+        dropdown.appendChild(option);
+      }
+    });}
+  const dropdown = document.getElementById("jamDropdownChange");
+  dropdown.innerHTML = ""; // Kosongkan dulu
+
+  fetch("?get_booked_times=1&tanggal=" + tanggal)
+    .then(res => res.json())
+    .then(booked => {
+      // Sort booked times just in case they're not in order
+      booked.sort();
+      
+      const semuaJam = generateJamOptions("07:00", "24:00", 120); // 120 minutes = 2 hours
+      const availableSlots = [];
+      
+      // Generate available time slots with their end times
+      for (let i = 0; i < semuaJam.length; i++) {
+        const startTime = semuaJam[i];
+        
+        // Skip if this time is booked
+        if (booked.includes(startTime)) continue;
+        
+        // Calculate end time (10 minutes before next slot or closing time)
+        let endTime;
+        if (i < semuaJam.length - 1) {
+          // Parse next time to calculate 10 minutes before it
+          const nextTime = semuaJam[i+1];
+          const [nextH, nextM] = nextTime.split(":").map(Number);
+          const nextDate = new Date(0, 0, 0, nextH, nextM);
+          nextDate.setMinutes(nextDate.getMinutes() - 10); // 10 minutes before
+          
+          endTime = 
+            String(nextDate.getHours()).padStart(2, '0') + ":" + 
+            String(nextDate.getMinutes()).padStart(2, '0');
+        } else {
+          // For the last slot, end time is 10 minutes before closing (23:00)
+          endTime = "00:50";
+        }
+        
+        availableSlots.push({
+          start: startTime,
+          end: endTime
+        });
+      }
+
+      // Populate dropdown with formatted options
+      availableSlots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot.start;
+        option.textContent = `${slot.start} - ${slot.end}`;
+        dropdown.appendChild(option);
       });
 
       if (dropdown.options.length === 0) {
@@ -303,9 +397,9 @@ function loadJamOptions(tanggal) {
         dropdown.appendChild(option);
       }
     });
-}
 
-// Fungsi buat generate jam 1.5 jam sekali
+
+// Helper function to generate time options (unchanged)
 function generateJamOptions(start, end, stepMinutes) {
   const pad = n => n.toString().padStart(2, "0");
   const options = [];
