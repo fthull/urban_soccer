@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 01 Agu 2025 pada 09.58
+-- Waktu pembuatan: 07 Agu 2025 pada 06.31
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -32,17 +32,21 @@ CREATE TABLE `booking` (
   `nama` varchar(100) DEFAULT NULL,
   `no_hp` varchar(20) DEFAULT NULL,
   `tanggal` date DEFAULT NULL,
-  `waktu` datetime DEFAULT NULL
+  `waktu` datetime DEFAULT NULL,
+  `status` enum('Process','Booked') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `booking`
 --
 
-INSERT INTO `booking` (`id`, `nama`, `no_hp`, `tanggal`, `waktu`) VALUES
-(7, 'gusdur', '082134431425', '2025-08-16', '2025-08-16 07:00:00'),
-(10, 'adong', '08992193321', '2025-08-15', '2025-08-15 13:00:00'),
-(11, 'saiful', '08985443324', '2025-08-15', '2025-08-15 15:00:00');
+INSERT INTO `booking` (`id`, `nama`, `no_hp`, `tanggal`, `waktu`, `status`) VALUES
+(13, 'adong', '08985443324', '2025-08-08', '2025-08-08 07:00:00', 'Booked'),
+(14, 'gusdur', '082134431425', '2025-08-08', '2025-08-08 15:00:00', 'Booked'),
+(15, 'saiful', '08985443324', '2025-08-10', '2025-08-10 07:00:00', 'Process'),
+(17, 'vian', '08777456875', '2025-08-08', '2025-08-08 11:00:00', 'Process'),
+(18, 'ahmad', '086575345346', '2025-08-08', '2025-08-08 13:00:00', 'Process'),
+(19, 'aldi', '086767576546', '2025-08-01', '2025-08-01 07:00:00', 'Booked');
 
 --
 -- Indexes for dumped tables
@@ -62,7 +66,7 @@ ALTER TABLE `booking`
 -- AUTO_INCREMENT untuk tabel `booking`
 --
 ALTER TABLE `booking`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
