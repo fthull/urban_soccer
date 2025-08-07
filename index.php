@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URBAN SOCCER FIELD</title>
+    <title>MGD Seccor Magelang</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,10 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
             text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
         }
 
-        /* Calendar Styles */
-        #calendar {
-            height: 900px;
-            overflow: hidden;
+        
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+
         }
 
         /* Set tinggi semua baris tanggal menjadi 120px */
@@ -470,6 +470,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
             transform: scale(1.03);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        @media (max-width: 768px) {
+          .fc-daygrid-day-frame {
+            height: 80px !important;
+            min-height: 80px !important;
+          }
+          .fc-daygrid-day-events {
+            max-height: calc(80px - 20px);
+          }
+          .fc-toolbar-title {
+            font-size: 1.2rem !important;
+          }
+          .fc-event {
+            font-size: 10px; /* Ukuran font diperkecil untuk event */
+            padding: 1px 2px;
+          }
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--usf-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            background-color: #55a858;
+        }
     </style>
 
 </head>
@@ -537,7 +592,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
                     </div>
                     <div class="mt-4 flex justify-end gap-2">
                         <button class="bg-gray-300 text-black px-4 py-2 rounded-md" type="button" onclick="closeModal()">Batal</button>
-                        <button class="bg-usf-green text-black px-4 py-2 rounded-md font-semibold" type="submit">Simpan</button>
+                        <button class="bg-usf-green text-white px-4 py-2 rounded-md font-semibold" type="submit">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -558,7 +613,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 </div>
                     <div class="mt-4 flex justify-end gap-2">
                         <button class="bg-gray-300 text-black px-4 py-2 rounded-md" type="button" onclick="closeChangeModal()">Batal</button>
-                        <button class="bg-usf-green text-black px-4 py-2 rounded-md font-semibold" type="submit">Update Booking</button>
+                        <button class="bg-usf-green text-white px-4 py-2 rounded-md font-semibold" type="submit">Update Booking</button>
                     </div>
                 </form>
             </div>
@@ -751,6 +806,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     AOS.init();
 
@@ -790,7 +846,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         }
     });
 
-    // JS dari file booking
+    // JS dari file booking (dengan SweetAlert2)
     document.addEventListener("DOMContentLoaded", function () {
         const calendarEl = document.getElementById("calendar");
         const bookedEvents = <?php echo json_encode($events); ?>;
@@ -805,12 +861,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
                 const tanggal = info.dateStr;
                 document.getElementById("tanggal").value = tanggal;
                 document.getElementById("bookingModal").style.display = "flex";
-                loadJamOptions(tanggal);
+                loadJamOptions(tanggal, document.getElementById("jamDropdown"));
             },
             headerToolbar: {
-                left: 'prev',
+                left: 'prev,next',
                 center: 'title',
-                right: 'next'
+                right: ''
             },
             dayCellContent: function(info) {
                 return info.dayNumberText;
@@ -826,62 +882,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 
     function openChangeModal() {
         document.getElementById("changeModal").style.display = "flex";
+        const tanggalChangeInput = document.querySelector("#changeModal input[name='tanggal']");
+        tanggalChangeInput.addEventListener('change', (e) => {
+            loadJamOptions(e.target.value, document.getElementById("jamDropdownChange"));
+        });
+        if (tanggalChangeInput.value) {
+            loadJamOptions(tanggalChangeInput.value, document.getElementById("jamDropdownChange"));
+        }
     }
 
     function closeChangeModal() {
         document.getElementById("changeModal").style.display = "none";
     }
 
-    function loadJamOptions(tanggal) {
-  const dropdown = document.getElementById("jamDropdown");
-  dropdown.innerHTML = ""; // Kosongkan dulu
+    function generateJamOptions(start, end, stepMinutes) {
+        const pad = n => n.toString().padStart(2, "0");
+        const options = [];
 
-  fetch("?get_booked_times=1&tanggal=" + tanggal)
-    .then(res => res.json())
-    .then(booked => {
-      // Sort booked times just in case they're not in order
-      booked.sort();
-      
-      const semuaJam = generateJamOptions("07:00", "24:00", 120); // 120 minutes = 2 hours
-      const availableSlots = [];
-      
-      // Generate available time slots with their end times
-      for (let i = 0; i < semuaJam.length; i++) {
-        const startTime = semuaJam[i];
-        
-        // Skip if this time is booked
-        if (booked.includes(startTime)) continue;
-        
-        // Calculate end time (10 minutes before next slot or closing time)
-        let endTime;
-        if (i < semuaJam.length - 1) {
-          // Parse next time to calculate 10 minutes before it
-          const nextTime = semuaJam[i+1];
-          const [nextH, nextM] = nextTime.split(":").map(Number);
-          const nextDate = new Date(0, 0, 0, nextH, nextM);
-          nextDate.setMinutes(nextDate.getMinutes() - 10); // 10 minutes before
-          
-          endTime = 
-            String(nextDate.getHours()).padStart(2, '0') + ":" + 
-            String(nextDate.getMinutes()).padStart(2, '0');
-        } else {
-          // For the last slot, end time is 10 minutes before closing (23:00)
-          endTime = "00:50";
+        let [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        let startDate = new Date(0, 0, 0, sh, sm);
+        const endDate = new Date(0, 0, 0, eh, em);
+
+        while (startDate <= endDate) {
+            options.push(pad(startDate.getHours()) + ":" + pad(startDate.getMinutes()));
+            startDate.setMinutes(startDate.getMinutes() + stepMinutes);
         }
-        
-        availableSlots.push({
-          start: startTime,
-          end: endTime
-        });
-      }
 
-      // Populate dropdown with formatted options
-      availableSlots.forEach(slot => {
-        const option = document.createElement("option");
-        option.value = slot.start;
-        option.textContent = `${slot.start} - ${slot.end}`;
-        dropdown.appendChild(option);
-      });
+        return options;
+    }
+
+    function loadJamOptions(tanggal, dropdownElement) {
+        dropdownElement.innerHTML = "";
+        fetch("?get_booked_times=1&tanggal=" + tanggal)
+            .then(res => res.json())
+            .then(booked => {
+                const semuaJam = generateJamOptions("07:00", "24:00", 120);
+                const availableSlots = [];
+                for (let i = 0; i < semuaJam.length; i++) {
+                    const startTime = semuaJam[i];
+                    if (booked.includes(startTime)) continue;
+
+                    let endTime;
+                    if (i < semuaJam.length - 1) {
+                        const nextTime = semuaJam[i+1];
+                        const [nextH, nextM] = nextTime.split(":").map(Number);
+                        const nextDate = new Date(0, 0, 0, nextH, nextM);
+                        nextDate.setMinutes(nextDate.getMinutes() - 10);
+                        endTime = 
+                            String(nextDate.getHours()).padStart(2, '0') + ":" + 
+                            String(nextDate.getMinutes()).padStart(2, '0');
+                    } else {
+                        endTime = "00:50";
+                    }
+                    
+                    availableSlots.push({
+                        start: startTime,
+                        end: endTime
+                    });
+                }
+
+                if (availableSlots.length > 0) {
+                    availableSlots.forEach(slot => {
+                        const option = document.createElement("option");
+                        option.value = slot.start;
+                        option.textContent = `${slot.start} - ${slot.end}`;
+                        dropdownElement.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement("option");
+                    option.text = "Tidak ada jam yang tersedia";
+                    option.disabled = true;
+                    dropdownElement.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching booked times:", error);
+            });
+    }
+
 
       if (dropdown.options.length === 0) {
         const option = document.createElement("option");
@@ -976,11 +1055,37 @@ function generateJamOptions(start, end, stepMinutes) {
         })
         .then(response => response.text())
         .then(data => {
-            alert(data);
-            closeModal();
-            location.reload();
+            if (data.includes("Berhasil")) {
+                Swal.fire({
+                    title: "Berhasil!",
+                    text: "Booking Anda berhasil dilakukan. Kami tunggu kedatangan Anda!",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#388E3C"
+                }).then(() => {
+                    closeModal();
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: "Gagal!",
+                    text: data,
+                    icon: "error",
+                    confirmButtonText: "Tutup",
+                    confirmButtonColor: "#d33"
+                });
+            }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: "Error!",
+                text: "Terjadi kesalahan pada server.",
+                icon: "error",
+                confirmButtonText: "Tutup",
+                confirmButtonColor: "#d33"
+            });
+        });
     });
 
     document.getElementById("changeForm").addEventListener("submit", function(event) {
@@ -993,11 +1098,37 @@ function generateJamOptions(start, end, stepMinutes) {
         })
         .then(response => response.text())
         .then(data => {
-            alert(data);
-            closeChangeModal();
-            location.reload();
+            if (data.includes("Berhasil update")) {
+                Swal.fire({
+                    title: "Berhasil!",
+                    text: "Booking Anda berhasil diubah.",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#388E3C"
+                }).then(() => {
+                    closeChangeModal();
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: "Gagal!",
+                    text: data,
+                    icon: "error",
+                    confirmButtonText: "Tutup",
+                    confirmButtonColor: "#d33"
+                });
+            }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: "Error!",
+                text: "Terjadi kesalahan pada server.",
+                icon: "error",
+                confirmButtonText: "Tutup",
+                confirmButtonColor: "#d33"
+            });
+        });
     });
 
     // JS untuk Galeri Swiper (auto slide dengan transisi geser)
