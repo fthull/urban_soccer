@@ -190,13 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
             text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
         }
 
-        /* Calendar Styles */
-        #calendar {
-            /* Hapus tinggi tetap agar responsif */
-        }
         
         .fc-toolbar-title {
             font-size: 1.5rem !important;
+
         }
 
         /* Set tinggi semua baris tanggal menjadi 120px */
@@ -964,6 +961,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
             });
     }
 
+
+      if (dropdown.options.length === 0) {
+        const option = document.createElement("option");
+        option.text = "Tidak ada jam tersedia";
+        option.disabled = true;
+        dropdown.appendChild(option);
+      }
+    });}
+  const dropdown = document.getElementById("jamDropdownChange");
+  dropdown.innerHTML = ""; // Kosongkan dulu
+
+  fetch("?get_booked_times=1&tanggal=" + tanggal)
+    .then(res => res.json())
+    .then(booked => {
+      // Sort booked times just in case they're not in order
+      booked.sort();
+      
+      const semuaJam = generateJamOptions("07:00", "24:00", 120); // 120 minutes = 2 hours
+      const availableSlots = [];
+      
+      // Generate available time slots with their end times
+      for (let i = 0; i < semuaJam.length; i++) {
+        const startTime = semuaJam[i];
+        
+        // Skip if this time is booked
+        if (booked.includes(startTime)) continue;
+        
+        // Calculate end time (10 minutes before next slot or closing time)
+        let endTime;
+        if (i < semuaJam.length - 1) {
+          // Parse next time to calculate 10 minutes before it
+          const nextTime = semuaJam[i+1];
+          const [nextH, nextM] = nextTime.split(":").map(Number);
+          const nextDate = new Date(0, 0, 0, nextH, nextM);
+          nextDate.setMinutes(nextDate.getMinutes() - 10); // 10 minutes before
+          
+          endTime = 
+            String(nextDate.getHours()).padStart(2, '0') + ":" + 
+            String(nextDate.getMinutes()).padStart(2, '0');
+        } else {
+          // For the last slot, end time is 10 minutes before closing (23:00)
+          endTime = "00:50";
+        }
+        
+        availableSlots.push({
+          start: startTime,
+          end: endTime
+        });
+      }
+
+      // Populate dropdown with formatted options
+      availableSlots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot.start;
+        option.textContent = `${slot.start} - ${slot.end}`;
+        dropdown.appendChild(option);
+      });
+
+      if (dropdown.options.length === 0) {
+        const option = document.createElement("option");
+        option.text = "Tidak ada jam tersedia";
+        option.disabled = true;
+        dropdown.appendChild(option);
+      }
+    });
+
+
+// Helper function to generate time options (unchanged)
+function generateJamOptions(start, end, stepMinutes) {
+  const pad = n => n.toString().padStart(2, "0");
+  const options = [];
+
+  let [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let startDate = new Date(0, 0, 0, sh, sm);
+  const endDate = new Date(0, 0, 0, eh, em);
+
+  while (startDate <= endDate) {
+    options.push(pad(startDate.getHours()) + ":" + pad(startDate.getMinutes()));
+    startDate.setMinutes(startDate.getMinutes() + stepMinutes);
+  }
+
+  return options;
+}
     document.getElementById("bookingForm").addEventListener("submit", function(event) {
         event.preventDefault();
         const formData = new FormData(this);
