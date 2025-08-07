@@ -3,6 +3,7 @@ session_start();
 
 // Database connection
 include "conn.php";
+global $conn;
 
 // --- Endpoint: Ambil semua event booking untuk FullCalendar ---
 if (isset($_GET['load'])) {
@@ -11,29 +12,25 @@ if (isset($_GET['load'])) {
     $result = $conn->query("SELECT id, nama, waktu, status FROM booking ORDER BY waktu ASC, tanggal ASC");
 
     while ($row = $result->fetch_assoc()) {
-            $status = $row['status'] === 'Booked' ? 'Booked' : 'Process';
-
+        $status = $row['status'] === 'Booked' ? 'Booked' : 'Menunggu';
+        $eventColor = '#dc3545';
+        if (isset($row['status'])) {
+            if ($row['status'] === 'Menunggu') {
+                $eventColor = '#ffc107'; // Kuning
+            } else if ($row['status'] === 'Booked') {
+                $eventColor = '#28a745'; // Hijau
+            }
+        }
         $events[] = [
-            'title' => $status .' '. $row['nama'] . ': (' . date('H:i', strtotime($row['waktu'])) . ')',
+            'id' => $row['id'],
+            'title' => htmlspecialchars($row['nama']) . ' (' . date('H:i', strtotime($row['waktu'])) . ')',
             'start' => date('Y-m-d\TH:i:s', strtotime($row['waktu'])),
-            'color' => '#dc3545',
+            'color' => $eventColor,
             'extendedProps' => [
                 'booking_id' => $row['id']
             ]
         ];
     }
-// $events = [];
-// $result = $conn->query("SELECT nama, waktu, status FROM booking ORDER BY waktu ASC");
-
-// while ($row = $result->fetch_assoc()) {
-//     $status = $row['status'] === 'Booked' ? 'Booked' : 'Process';
-
-//     $events[] = [
-//         'title' => $status . ': (' . date('H:i', strtotime($row['waktu'])) . ')',
-//         'start' => date('c', strtotime($row['waktu'])), // Format ISO 8601
-//         'allDay' => false
-//     ];
-// }
 
     echo json_encode($events);
     exit;
@@ -58,6 +55,35 @@ if (isset($_GET['booking_id'])) {
 
     exit;
 }
+
+// ==============================================
+// BAGIAN UNTUK MENAMPILKAN HALAMAN DASHBOARD
+// ==============================================
+
+// Query untuk statistik dashboard
+$jumlahMenunggu = 0;
+$bookedAll = 0;
+$bookedToday = 0;
+
+$stmt_stats = $conn->prepare("SELECT 
+    (SELECT COUNT(*) FROM booking WHERE status = 'Menunggu') AS jumlahMenunggu,
+    (SELECT COUNT(*) FROM booking WHERE status = 'Booked') AS bookedAll,
+    (SELECT COUNT(*) FROM booking WHERE status = 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
+");
+
+if ($stmt_stats) {
+    $stmt_stats->execute();
+    $result_stats = $stmt_stats->get_result();
+    if ($data_stats = $result_stats->fetch_assoc()) {
+        $jumlahMenunggu = $data_stats['jumlahMenunggu'];
+        $bookedAll = $data_stats['bookedAll'];
+        $bookedToday = $data_stats['bookedToday'];
+    }
+    $stmt_stats->close();
+}
+
+// Perhitungan total booking
+$totalBookings = $jumlahMenunggu + $bookedAll;
 
 $conn->close();
 ?>
@@ -177,20 +203,16 @@ $conn->close();
     <div class="wrapper">
 
         <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
+            <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/logom.png" alt="AdminLTELogo" height="60" width="60">
         </div>
-
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="index3.html" class="brand-link">
-                <img src="mgdlogo.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
+                <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
                 <span class="brand-text font-weight-light">MGD Soccer Field</span>
             </a>
 
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                    <div class="image">
-                        <img src="dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
-                    </div>
                     <div class="info">
                         <a href="#" class="d-block">
 
@@ -242,7 +264,7 @@ $conn->close();
                             <a href="kasir.php" class="nav-link">
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
-                                    Kasir
+                                    Harga
                                 </p>
                             </a>
                         </li>
@@ -269,73 +291,60 @@ $conn->close();
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3></h3>
-                                    <p>Booking Menunggu</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-stats-bars"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                    <h4><b>Menunggu</b></h4>
+                                    <h3><?=$jumlahMenunggu?></h3>
+                                </div><br>
+                                <div class="icon"><i class="ion ion-loop"></i></div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3></h3>
-                                    <p>Booking Selesai</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-person-add"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                    <h4><b>Booked All</b></h4>
+                                    <h3><?=$bookedAll?></h3>
+                                </div><br>
+                                <div class="icon"><i class="ion ion-calendar"></i></div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h6></h6>
-                                    <p>Layanan Terlaris ( pesanan)</p>
+                                    <h4><b>Booked Today</b></h4>
+                                    <h3><?=$bookedToday?></h3>
                                 </div><br>
-                                <div class="icon">
-                                    <i class="ion ion-star"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                <div class="icon"><i class="ion ion-checkmark-round"></i></div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-danger">
                                 <div class="inner">
-                                    <h6></h6>
-                                    <p>Layanan Kurang Diminati ( pesanan)</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-minus-circled"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                    <h4><b>Total Booking</b></h4>
+                                    <h3><?=$totalBookings?></h3>
+                                </div><br>
+                                <div class="icon"><i class="ion ion-ios-list"></i></div>
                             </div>
                         </div>
                     </div>
 
                     <div id="calendar"></div>
 
-                    <!-- Modal Detail Booking -->
-<div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="bookingModalLabel">Detail Booking</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="bookingModalLabel">Detail Booking</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
                 </div>
             </section>
@@ -396,31 +405,31 @@ $conn->close();
                     }
                 },
                 eventClick: function(info) {
-    const bookingId = info.event.extendedProps.booking_id;
+                    const bookingId = info.event.extendedProps.booking_id;
 
-    fetch(`admin.php?booking_id=${bookingId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const booking = data.booking;
+                    fetch(`admin.php?booking_id=${bookingId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const booking = data.booking;
 
-                $('#bookingModal .modal-body').html(`
-                    <strong>Nama:</strong> ${booking.nama}<br>
-                    <strong>No HP:</strong> ${booking.no_hp}<br>
-                    <strong>Tanggal:</strong> ${booking.tanggal.split(' ')[0]}<br>
-                    <strong>Jam:</strong> ${booking.waktu.split(' ')[1].substring(0,5)}<br>
-                `);
-                $('#bookingModalLabel').text('Detail Booking');
-                $('#bookingModal').modal('show');
-            } else {
-                alert('Booking tidak ditemukan.');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Gagal memuat data booking.');
-        });
-}
+                                $('#bookingModal .modal-body').html(`
+                                    <strong>Nama:</strong> ${booking.nama}<br>
+                                    <strong>No HP:</strong> ${booking.no_hp}<br>
+                                    <strong>Tanggal:</strong> ${booking.tanggal.split(' ')[0]}<br>
+                                    <strong>Jam:</strong> ${booking.waktu.split(' ')[1].substring(0,5)}<br>
+                                `);
+                                $('#bookingModalLabel').text('Detail Booking');
+                                $('#bookingModal').modal('show');
+                            } else {
+                                alert('Booking tidak ditemukan.');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Gagal memuat data booking.');
+                        });
+                }
 
             });
 
