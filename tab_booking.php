@@ -191,10 +191,9 @@ if ($result2) {
         <section class="content">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Menunggu</b></h4><h3><?=$jumlahMenunggu?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Process</b></h4><h3><?=$jumlahMenunggu?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h4><b>Booked All</b></h4><h3><?=$bookedAll?></h3></div><br><div class="icon"><i class="ion ion-calendar"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booked Today</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
-                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Total Booking</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
                 </div>
                 <div style="max-height: 500px; overflow-y: auto;">
                     <table class="table table-bordered table-striped">
@@ -231,6 +230,15 @@ if ($result2) {
                             <?php endif; ?>
                         </tbody>
                     </table>
+                    <!-- admin.php atau file admin Anda -->
+<div class="export-section">
+    <h3>Export Data</h3>
+    <form action="export.php" method="post">
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Export to Excel
+        </button>
+    </form>
+</div>
                 </div>
             </div>
         </section>
