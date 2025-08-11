@@ -34,7 +34,7 @@ $sheet->setCellValue('A'.$row, $row - 1);
 
 // Download file
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment;filename="data_export_'.date('Ymd').'.xlsx"');
+header('Content-Disposition: attachment;filename="data_booking_'.date('Ymd').'.xlsx"');
 header('Cache-Control: max-age=0');
 
 $writer = new Xlsx($spreadsheet);
