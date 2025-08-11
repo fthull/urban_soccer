@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_content_inline
             exit;
         }
     } else {
-        // Jika tidak ada file, ambil dari POST data (untuk teks atau link)
+        // Jika tidak ada file, ambil dari POST data (untuk teks)
         $new_content_value = $_POST['value'] ?? '';
     }
 
@@ -90,10 +90,10 @@ $GLOBALS['is_admin_mode'] = true;
         }
         body { padding-top: 60px; }
         .admin-content-wrapper { margin-top: 20px; }
-        /* Kelas dasar untuk semua elemen yang bisa diedit */
         .admin-editable-text, .admin-editable-image, .admin-editable-link {
             border: 2px dashed #00fff2ff;
             padding: 5px;
+            display: inline-block;
             cursor: pointer;
             transition: border-color 0.2s ease;
         }
@@ -101,20 +101,8 @@ $GLOBALS['is_admin_mode'] = true;
             border-color: #ffc107;
         }
         .hidden-file-input { display: none; }
-        
-        /* CSS tambahan untuk elemen yang bisa diedit */
-        .admin-editable-text, .admin-editable-link {
-            display: inline-block;
-        }
         .admin-editable-image {
-            width: 100%; /* Pastikan gambar mengisi lebar kontainernya */
-        }
-        /* Penting: Pastikan elemen slideshow punya ukuran */
-        .slide {
-            height: 500px; /* Atur tinggi sesuai kebutuhan */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            width: 100%;
         }
     </style>
 </head>
@@ -138,7 +126,7 @@ $GLOBALS['is_admin_mode'] = true;
     <script>
         $(document).ready(function() {
             // Tangani perubahan pada elemen teks
-            $(document).on('blur', '[contenteditable="true"]', function() {
+            $(document).on('blur', '.admin-editable-text', function() {
                 var element = $(this);
                 var key = element.data('key');
                 var newContent = element.text();
@@ -165,49 +153,17 @@ $GLOBALS['is_admin_mode'] = true;
                 });
             });
 
-            // Tangani klik pada elemen gambar (termasuk background-image)
+            // Tangani klik pada elemen gambar
             $(document).on('click', '.admin-editable-image', function(e) {
                 e.preventDefault(); 
-                var fileInput = $(this).closest('div[style*="position: relative;"]').find('.hidden-file-input');
-                fileInput.click();
+                // Cari input file tersembunyi yang terkait
+                $(this).closest('div').find('.hidden-file-input').click();
             });
-
-            // Tangani klik pada elemen link (peta)
-            $(document).on('click', '.admin-editable-link', function(e) {
-                e.preventDefault();
-                var element = $(this);
-                var key = element.data('key');
-                var currentLink = element.attr('href') || prompt('Masukkan URL baru:', element.data('default-link'));
-
-                if (currentLink !== null) {
-                    $.ajax({
-                        url: 'manage_content.php',
-                        type: 'POST',
-                        data: {
-                            update_content_inline: true,
-                            key: key,
-                            value: currentLink
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                element.attr('href', response.new_value);
-                                console.log('Link ' + key + ' berhasil diperbarui.');
-                            } else {
-                                console.error('Gagal memperbarui ' + key + ': ' + response.message);
-                                alert('Gagal memperbarui link: ' + response.message);
-                            }
-                        }
-                    });
-                }
-            });
-
 
             // Tangani perubahan file pada input file
             $(document).on('change', '.hidden-file-input', function() {
                 var fileInput = this;
                 var file = fileInput.files[0];
-                
-                // Cari elemen yang akan diperbarui (baik img atau div)
                 var element = $(this).closest('div').find('.admin-editable-image');
                 var key = element.data('key');
                 
@@ -234,8 +190,6 @@ $GLOBALS['is_admin_mode'] = true;
                                     element.css('background-image', 'url("' + response.new_value + '")');
                                 }
                                 console.log('Konten ' + key + ' berhasil diperbarui.');
-                                // Reload halaman untuk memastikan semua elemen slideshow diperbarui dengan benar
-                                location.reload();
                             } else {
                                 console.error('Gagal memperbarui ' + key + ': ' + response.message);
                                 alert('Gagal memperbarui konten: ' + response.message);

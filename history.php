@@ -208,7 +208,6 @@ $result = $stmt->get_result();
                                                 <th>No HP</th>
                                                 <th>Jam</th>
                                                 <th>Tanggal</th>
-                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -222,19 +221,7 @@ $result = $stmt->get_result();
                                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
                                                 <td><?= date('H:i', strtotime($row['waktu'])) ?></td>
                                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
-                                                <td>
-                                                    <?php
-                                                    $statusClass = '';
-                                                    if ($row['status'] == 'Selesai') {
-                                                        $statusClass = 'badge badge-success';
-                                                    } elseif ($row['status'] == 'Menunggu') {
-                                                        $statusClass = 'badge badge-warning';
-                                                    } elseif ($row['status'] == 'Ditolak') {
-                                                        $statusClass = 'badge badge-danger';
-                                                    }
-                                                    echo '<span class="' . $statusClass . '">' . htmlspecialchars($row['status']) . '</span>';
-                                                    ?>
-                                                </td>
+                                              
                                             </tr>
                                             <?php endwhile; ?>
                                         </tbody>
