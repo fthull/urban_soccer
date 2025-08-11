@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
 
 // Data kalender
 $events = [];
-$result = $conn->query("SELECT nama, waktu, status FROM booking where waktu >= now() ORDER BY waktu ASC");
+$result = $conn->query("SELECT nama, waktu, status FROM booking where waktu=now() ORDER BY waktu ASC");
 
 $events = [];
 while ($row = $result->fetch_assoc()) {
