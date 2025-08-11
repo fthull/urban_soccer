@@ -1,8 +1,29 @@
 <?php
-// Bagian PHP dari file booking
-// ... (kode PHP Anda tidak saya ubah karena sudah benar)
-include 'conn.php';
+// Koneksi ke database dan helper konten
+include "conn.php";
+include "content_helper.php";
 
+// Set mode admin jika diakses dari file admin.php
+$is_admin_mode = isset($GLOBALS['is_admin_mode']) && $GLOBALS['is_admin_mode'] === true;
+
+// Ambil semua konten dari database
+$site_content = getAllContent($conn);
+
+/**
+ * Fungsi helper untuk mendapatkan konten dari database atau nilai default.
+ * Digunakan untuk mengisi data ke dalam HTML.
+ *
+ * @param string $key Kunci konten
+ * @param string $default Nilai default jika kunci tidak ditemukan
+ * @return string Nilai konten
+ */
+function get_content($key, $default = '') {
+    global $site_content;
+    // htmlspecialchars() digunakan untuk mencegah XSS
+    return isset($site_content[$key]) ? htmlspecialchars($site_content[$key]) : htmlspecialchars($default);
+}
+
+// Logika untuk menambahkan booking baru
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
     $nama = $_POST['nama'] ?? '';
     $no_hp = $_POST['no_hp'] ?? '';
@@ -23,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO booking (nama, no_hp, tanggal, waktu) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO booking (nama, no_hp, tanggal, waktu, status) VALUES (?, ?, ?, ?, 'Process')");
     $stmt->bind_param("ssss", $nama, $no_hp, $tanggal, $waktu_penuh);
 
     if ($stmt->execute()) {
@@ -35,8 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
     exit;
 }
 
+// Logika untuk mengambil data booking untuk kalender
 $events = [];
-$result = $conn->query("SELECT nama, waktu, status FROM booking where waktu >= now() ORDER BY waktu ASC");
+$result = $conn->query("SELECT nama, waktu, status FROM booking WHERE waktu >= NOW() ORDER BY waktu ASC");
 while ($row = $result->fetch_assoc()) {
     $status = $row['status'] === 'Booked' ? 'Booked' : 'Process';
     $color = $status === 'Booked' ? '#28a745' : '#ffc107';
@@ -49,6 +71,7 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
+// Logika untuk mengambil jam yang sudah dibooking pada tanggal tertentu
 if (isset($_GET['get_booked_times']) && isset($_GET['tanggal'])) {
     $tanggal = $_GET['tanggal'];
     $booked = [];
@@ -66,6 +89,7 @@ if (isset($_GET['get_booked_times']) && isset($_GET['tanggal'])) {
     exit;
 }
 
+// Logika untuk mengubah booking
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     $nama = $_POST['nama'] ?? '';
     $no_hp = $_POST['no_hp'] ?? '';
@@ -107,13 +131,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     $update->close();
     exit;
 }
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGD Seccor Magelang</title>
+    <title><?php echo get_content('website_title', 'MGD Seccor Magelang'); ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -492,20 +517,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         }
         
         @media (max-width: 768px) {
-          .fc-daygrid-day-frame {
-            height: 80px !important;
-            min-height: 80px !important;
-          }
-          .fc-daygrid-day-events {
-            max-height: calc(80px - 20px);
-          }
-          .fc-toolbar-title {
-            font-size: 1.2rem !important;
-          }
-          .fc-event {
-            font-size: 10px; /* Ukuran font diperkecil untuk event */
-            padding: 1px 2px;
-          }
+            .fc-daygrid-day-frame {
+                height: 80px !important;
+                min-height: 80px !important;
+            }
+            .fc-daygrid-day-events {
+                max-height: calc(80px - 20px);
+            }
+            .fc-toolbar-title {
+                font-size: 1.2rem !important;
+            }
+            .fc-event {
+                font-size: 10px; /* Ukuran font diperkecil untuk event */
+                padding: 1px 2px;
+            }
         }
         
         .btn-primary-custom {
@@ -520,15 +545,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         .btn-primary-custom:hover {
             background-color: #55a858;
         }
-    </style>
 
+        /* === Gaya untuk Admin Edit Inline === */
+        .admin-editable-text {
+            <?php if ($is_admin_mode): ?>
+                border: 2px dashed #007bff;
+                padding: 5px;
+                display: inline-block;
+                cursor: pointer;
+            <?php endif; ?>
+        }
+        .admin-editable-text:hover {
+            <?php if ($is_admin_mode): ?>
+                cursor: pointer;
+                border-color: #ffc107;
+            <?php endif; ?>
+        }
+        .admin-editable-image {
+            <?php if ($is_admin_mode): ?>
+                border: 2px dashed #007bff;
+                padding: 5px;
+                display: inline-block;
+                cursor: pointer;
+            <?php endif; ?>
+        }
+        .admin-editable-image:hover {
+            <?php if ($is_admin_mode): ?>
+                cursor: pointer;
+                border-color: #ffc107;
+            <?php endif; ?>
+        }
+        .hidden-file-input { display: none; }
+    </style>
 </head>
-<body class="bg-black text-white">
+<body class="bg-black text-white <?php echo $is_admin_mode ? 'is-admin-mode' : ''; ?>">
 
 <header class="header" id="main-header">
     <div class="header-inner container">
         <a href="#" class="logo">
-            <img src="logom.png" alt="Logo">
+            <div style="position: relative;">
+                <img src="<?php echo get_content('logo_path', 'logom.png'); ?>" alt="Logo" class="
+                    <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                    data-key="logo_path">
+                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+            </div>
         </a>
         <nav class="navbar-menu">
             <ul class="nav-links">
@@ -544,17 +604,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 <main class="hero-section">
     <div class="banner-slideshow">
         <div class="slides">
-            <div class="slide" style="background-image: url('bn2.png');"></div>
-            <div class="slide" style="background-image: url('bn1.png');"></div>
-            <div class="slide" style="background-image: url('galeri/b.jpeg');"></div>
+            <div class="slide" style="background-image: url('<?php echo get_content('hero_banner1_path', 'bn2.png'); ?>');"></div>
+            <div class="slide" style="background-image: url('<?php echo get_content('hero_banner2_path', 'bn1.png'); ?>');"></div>
+            <div class="slide" style="background-image: url('<?php echo get_content('hero_banner3_path', 'galeri/b.jpeg'); ?>');"></div>
         </div>
     </div>
 
     <div class="container hero-content">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <h1 class="display-3 fw-bold mb-3">MGD Soccer Field Magelang</h1>
-                <p class="fs-5 mb-4">Waktunya main! Segera booking lapangan untuk timmu</p>
+                <h1 class="display-3 fw-bold mb-3 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-key="hero_heading"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                    <?php echo get_content('hero_heading', 'MGD Soccer Field Magelang'); ?>
+                </h1>
+                <p class="fs-5 mb-4 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-key="hero_subtext"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                    <?php echo get_content('hero_subtext', 'Waktunya main! Segera booking lapangan untuk timmu'); ?>
+                </p>
                 <a href="#booking-section" class="btn-book btn btn-lg fw-bold">Book Sekarang</a>
             </div>
         </div>
@@ -563,7 +631,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 
 <section id="booking-section" class="booking-section py-5 bg-white text-black">
     <div class="container">
-        <h2 class="section-title text-center mb-5 text-5xl font-bold text-center text-gray-800" data-aos="fade-down" style="font-family: 'Montserrat', sans-serif;">Booking Lapangan</h2>
+        <h2 class="section-title text-center mb-5 text-5xl font-bold text-center text-gray-800"
+            data-aos="fade-down"
+            style="font-family: 'Montserrat', sans-serif;"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>" data-key="booking_title">
+            <?php echo get_content('booking_title', 'Booking Lapangan'); ?>
+        </h2>
         <div class="row justify-content-center" data-aos="fade-up">
             <div class="col-lg-9 col-md-10">
                 <div id="calendar-container" class="shadow-lg p-md-4 p-3 rounded-3 bg-white">
@@ -600,12 +674,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
                     <div><label class="block text-left font-semibold">Nama:</label><input class="w-full p-2 border rounded-md" type="text" name="nama" required></div>
                     <div><label class="block text-left font-semibold">No HP:</label><input class="w-full p-2 border rounded-md" type="text" name="no_hp" required></div>
                     <div><label class="block text-left font-semibold">Tanggal Baru:</label><input class="w-full p-2 border rounded-md" type="date" name="tanggal" required></div>
-<div>
-  <label>Jam Baru:</label>
-  <select name="jam" id="jamDropdownChange" required>
-     
-  </select>
-</div>
+                    <div>
+                        <label>Jam Baru:</label>
+                        <select name="jam" id="jamDropdownChange" required></select>
+                    </div>
                     <div class="mt-4 flex justify-end gap-2">
                         <button class="bg-gray-300 text-black px-4 py-2 rounded-md" type="button" onclick="closeChangeModal()">Batal</button>
                         <button class="bg-usf-green text-white px-4 py-2 rounded-md font-semibold" type="submit">Update Booking</button>
@@ -620,29 +692,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     <div class="min-h-screen flex items-center px-6 py-12 relative" >
         <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
             <div class="text-white max-w-xl pl-4 md:pl-12">
-                <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold"
+                <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold
+                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
                     style="font-family: 'Saira', sans-serif; color: #5fa140ff;"
-                    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">
-                    MGD Soccer Field
-                    <span class="text-white">Magelang</span>
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="about_heading1">
+                    <?php echo get_content('about_heading1', 'MGD Soccer Field'); ?>
+                    <span class="text-white
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="about_heading2"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('about_heading2', 'Magelang'); ?>
+                    </span>
                 </h1>
-                <p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow"
+                <p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow
+                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000"
                     style="font-family: 'Lexend Deca', sans-serif;"
-                    data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000">
-                    MGD Soccer Field Magelang hadir sebagai wadah bagi setiap komunitas pecinta sepak bola yang ingin merasakan sensasi bermain dengan kualitas terbaik dan suasana menyenangkan.
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="about_text1">
+                    <?php echo get_content('about_text1', 'MGD Soccer Field Magelang hadir sebagai wadah bagi setiap komunitas pecinta sepak bola yang ingin merasakan sensasi bermain dengan kualitas terbaik dan suasana menyenangkan.'); ?>
                 </p>
 
-                <p class="text-[27px] leading-[36px] font-normal text-white text-shadow"
+                <p class="text-[27px] leading-[36px] font-normal text-white text-shadow
+                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000"
                     style="font-family: 'Lexend Deca', sans-serif;"
-                    data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000">
-                    Kami yakin bahwa sepak bola bukan hanya tentang mencetak gol,
-                    tapi juga tentang menjaga kebersamaan, tawa, dan semangat sportifitas.
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="about_text2">
+                    <?php echo get_content('about_text2', 'Kami yakin bahwa sepak bola bukan hanya tentang mencetak gol, tapi juga tentang menjaga kebersamaan, tawa, dan semangat sportifitas.'); ?>
                 </p>
             </div>
 
-            <div class="w-full md:w-auto"
-                    data-aos="fade-left" data-aos-duration="1600">
-                <img src="min.jpg" alt="Soccer image" class="w-full max-w-[430px]" />
+            <div class="w-full md:w-auto" data-aos="fade-left" data-aos-duration="1600">
+                <div style="position: relative;">
+                    <img src="<?php echo get_content('about_image_path', 'min.jpg'); ?>" alt="Soccer image" class="w-full max-w-[430px]
+                        <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="about_image_path">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -650,26 +739,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 
 <section id="gallery-section" class="gallery-section py-5 bg-white text-black">
     <div class="container mx-auto px-4">
-        <h2 class="text-5xl font-bold text-center text-gray-800" data-aos="fade-down" style="font-family: 'Montserrat', sans-serif;">Galeri MGD Soccer Field</h2>
+        <h2 class="text-5xl font-bold text-center text-gray-800
+            <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+            data-aos="fade-down"
+            style="font-family: 'Montserrat', sans-serif;"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            data-key="gallery_heading">
+            <?php echo get_content('gallery_heading', 'Galeri MGD Soccer Field'); ?>
+        </h2>
         <marquee behavior="scroll" direction="left" scrollamount="5" class="my-4" style="font-size: 1.1rem; color: #333;">
-            Lebih dari sekadar lapangan, Urban Soccer Field adalah ruang untuk mencipta kenangan. Galeri ini memperlihatkan momen kebersamaan, kerja tim, dan semangat sportivitas dari para pecinta bola.
+            <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                data-key="gallery_marquee_text"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                <?php echo get_content('gallery_marquee_text', 'Lebih dari sekadar lapangan, Urban Soccer Field adalah ruang untuk mencipta kenangan. Galeri ini memperlihatkan momen kebersamaan, kerja tim, dan semangat sportivitas dari para pecinta bola.'); ?>
+            </span>
         </marquee>
         <div class="swiper myGallerySwiper max-w-4xl mx-auto">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
                     <div class="grid grid-cols-2 grid-rows-2 gap-4">
-                        <img src="galeri/gal1.png" alt="Gallery Image 1" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal2.png" alt="Gallery Image 2" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal3.png" alt="Gallery Image 3" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal4.png" alt="Gallery Image 4" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image1_path', 'galeri/gal1.png'); ?>" alt="Gallery Image 1" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image1_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image2_path', 'galeri/gal2.png'); ?>" alt="Gallery Image 2" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image2_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image3_path', 'galeri/gal3.png'); ?>" alt="Gallery Image 3" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image3_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image4_path', 'galeri/gal4.png'); ?>" alt="Gallery Image 4" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image4_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 <div class="swiper-slide">
                     <div class="grid grid-cols-2 grid-rows-2 gap-4">
-                        <img src="galeri/gal5.png" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal6.png" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal7.png" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
-                        <img src="galeri/gal8.png" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl">
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image5_path', 'galeri/gal5.png'); ?>" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image5_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image6_path', 'galeri/gal6.png'); ?>" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image6_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image7_path', 'galeri/gal7.png'); ?>" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image7_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
+                        <div style="position: relative;">
+                            <img src="<?php echo get_content('gallery_image8_path', 'galeri/gal8.png'); ?>" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                                <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                data-key="gallery_image8_path">
+                            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -680,51 +820,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     </div>
 </section>
 
-<section class="bg-gradient-to-r from-[#121212]  px-6 py-10">
+<section class="bg-gradient-to-r from-[#121212] px-6 py-10">
     <div class="max-w-7xl mx-auto text-white">
         <div class="flex flex-col md:flex-row justify-between text-center md:text-left items-center md:items-start gap-10">
             <div class="flex-1 border-r border-gray-600 px-12">
                 <ul class="list-disc list-inside space-y-3 text-left">
-                    <li class="text-lg font-semibold">Lapangan ukuran 55 x 22 m</li>
-                    <li class="text-lg font-semibold">Lampu penerangan</li>
-                    <li class="text-lg font-semibold">Rumput sintetis Fifa Standar</li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list1_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list1_text', 'Lapangan ukuran 55 x 22 m'); ?>
+                    </li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list2_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list2_text', 'Lampu penerangan'); ?>
+                    </li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list3_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list3_text', 'Rumput sintetis Fifa Standar'); ?>
+                    </li>
                 </ul>
             </div>
             <div class="flex-1 border-r border-gray-600 px-12">
                 <ul class="list-disc list-inside space-y-3 text-left">
-                    <li class="text-lg font-semibold">Kamar Mandi</li>
-                    <li class="text-lg font-semibold">Cafe and Mushola</li>
-                    <li class="text-lg font-semibold">Parkir</li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list4_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list4_text', 'Kamar Mandi'); ?>
+                    </li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list5_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list5_text', 'Cafe and Mushola'); ?>
+                    </li>
+                    <li class="text-lg font-semibold
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="feature_list6_text"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('feature_list6_text', 'Parkir'); ?>
+                    </li>
                 </ul>
             </div>
             <div class="flex-1 flex flex-col items-center justify-center text-center px-12">
                 <i class="fas fa-map-marker-alt text-4xl mb-2 text-white"></i>
-                <p class="text-lg font-semibold">Jl. Soekarno Hatta No.5</p>
-                <p class="text-lg font-semibold">Magelang</p>
+                <p class="text-lg font-semibold
+                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-key="location_address1"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                    <?php echo get_content('location_address1', 'Jl. Soekarno Hatta No.5'); ?>
+                </p>
+                <p class="text-lg font-semibold
+                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-key="location_address2"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                    <?php echo get_content('location_address2', 'Magelang'); ?>
+                </p>
             </div>
         </div>
         
         <div class="flex justify-start px-8 my-6 justify-content-center">
-            <h2 class="text-white text-5xl font-bold text-center" data-aos="fade-down" style="font-family: 'Montserrat', sans-serif;">Program Spesial MGD</h2>
+            <h2 class="text-white text-5xl font-bold text-center
+                <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                data-aos="fade-down"
+                style="font-family: 'Montserrat', sans-serif;"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="program_heading">
+                <?php echo get_content('program_heading', 'Program Spesial MGD'); ?>
+            </h2>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 my-10 justify-between">
             <div class="relative w-full md:w-1/3">
-                <img src="pemain.png" alt="Private Event" class="w-full h-auto object-cover rounded-lg">
+                <div style="position: relative;">
+                    <img src="<?php echo get_content('program1_image_path', 'pemain.png'); ?>" alt="Private Event" class="w-full h-auto object-cover rounded-lg
+                        <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="program1_image_path">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                </div>
                 <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-                    <p class="text-white text-2xl font-bold text-center">Reward Pemain Terbaik</p>
+                    <p class="text-white text-2xl font-bold text-center
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="program1_title"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('program1_title', 'Reward Pemain Terbaik'); ?>
+                    </p>
                 </div>
             </div>
             <div class="relative w-full md:w-1/3">
-                <img src="pelajar.png" alt="Rent a Field" class="w-full h-auto object-cover rounded-lg">
+                <div style="position: relative;">
+                    <img src="<?php echo get_content('program2_image_path', 'pelajar.png'); ?>" alt="Rent a Field" class="w-full h-auto object-cover rounded-lg
+                        <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="program2_image_path">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                </div>
                 <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-                    <p class="text-white text-2xl font-bold text-center">Diskon Khusus Pelajar</p>
+                    <p class="text-white text-2xl font-bold text-center
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="program2_title"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('program2_title', 'Diskon Khusus Pelajar'); ?>
+                    </p>
                 </div>
             </div>
             <div class="relative w-full md:w-1/3">
-                <img src="sewa.png" alt="Open Play" class="w-full h-auto object-cover rounded-lg">
+                <div style="position: relative;">
+                    <img src="<?php echo get_content('program3_image_path', 'sewa.png'); ?>" alt="Open Play" class="w-full h-auto object-cover rounded-lg
+                        <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="program3_image_path">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                </div>
                 <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-                    <p class="text-white text-2xl font-bold text-center">Sewa Sepatu Gratis</p>
+                    <p class="text-white text-2xl font-bold text-center
+                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="program3_title"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('program3_title', 'Sewa Sepatu Gratis'); ?>
+                    </p>
                 </div>
             </div>
         </div>
@@ -732,55 +949,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 </section>
 
 <section id="map-section" class="map-section py-5 bg-white text-black">
-    <h4 class="text-center section-title mb-4">Lokasi Kami</h4>
+    <h4 class="text-center section-title mb-4
+        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+        data-key="map_title"
+        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+        <?php echo get_content('map_title', 'Lokasi Kami'); ?>
+    </h4>
     <div class="d-flex justify-content-center mt-4">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.6662217098583!2d110.2217516748534!3d-7.502051574001483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a8f1c869c6d39%3A0x7ea03e5884a0b39b!2sMGD%20Mini%20Soccer%20Magelang!5e0!3m2!1sid!2sid!4v1754453314773!5m2!1sid!2sid" width="80%" height="360" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.6662217098583!2d110.2217516748534!3d-7.502051574001483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a8f1c869c6d39%3A0x7ea03e5884a0b39b!2sMGD%20Mini%20Soccer%20Magelang!5e0!3m2!1sid!2sid!4v1754552705608!5m2!1sid!2sid"  width="80%" height="360" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
 </section>
 
 <footer class="relative overflow-hidden mt-16 bg-black">
     <div class="relative max-w-7xl mx-auto px-6 py-16 flex flex-col items-center md:flex-row md:justify-center md:items-start gap-12 md:gap-24">
-        <div class="flex flex-col items-center md:items-center max-w-md md:max-w-none text-center">
-            <img
-                alt="USF Urban Soccer Field logo"
-                class="w-63 md:w-72 mx-auto"
-                src="logom.png"
-            />
+        <div class="flex flex-col items-center md:items-start max-w-md md:max-w-none text-center md:text-left">
+            <div style="position: relative;">
+                <img
+                    alt="USF Urban Soccer Field logo"
+                    class="h-40 mb-4 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                    data-key="footer_logo_path"
+                    src="<?php echo htmlspecialchars(get_content('footer_logo_path', 'logom.png')); ?>">
+                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input" data-key="footer_logo_path" accept="image/*" /><?php endif; ?>
+            </div>
         </div>
 
-        <div class="flex flex-col md:flex-row md:gap-24 text-lg">
+        <div class="flex flex-col md:flex-row md:gap-24 text-lg text-center md:text-left">
             <div>
-                <h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4">Site</h3>
+                <h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="footer_title"
+                    class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
+                    <?php echo htmlspecialchars(get_content('footer_title', 'Site')); ?>
+                </h3>
                 <ul class="space-y-2 font-normal hover-highlight">
-                    <li>Booking Lapangan</li>
-                    <li>Galeri MGD Soccer Field</li>
-                    <li>Program Spesial MGD</li>
-                    <li>Lokasi MGD Soccer</li>
+                    <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_1" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_1', 'Booking Lapangan')); ?></li>
+                    <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_2" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_2', 'Galeri MGD Soccer Field')); ?></li>
+                    <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_3" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_3', 'Program Spesial MGD')); ?></li>
+                    <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_4" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_4', 'Lokasi MGD Soccer')); ?></li>
                 </ul>
             </div>
             <div>
-                <h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4">Contact</h3>
+                <h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="footer_contact_title"
+                    class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
+                    <?php echo htmlspecialchars(get_content('footer_contact_title', 'Contact')); ?>
+                </h3>
                 <address class="not-italic space-y-3 font-normal hover-highlight">
-                    <p>Jl. Soekarno Hatta No.5, Magelang</p>
-                    <p>+62 811 2653 988</p>
-                    <p>MGD Soccer Field Magelang</p>
+                    <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_address" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_address', 'Jl. Soekarno Hatta No.5, Magelang')); ?></p>
+                    <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_phone" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_phone', '+62 811 2653 988')); ?></p>
+                    <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_company" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_company', 'MGD Soccer Field Magelang')); ?></p>
                 </address>
-                <ul class="flex space-x-6 mt-4 text-white">
+             <ul class="flex space-x-6 mt-4 ms-auto text-white">
                     <li>
-                        <a aria-label="YouTube" class="hover:text-[#5fa140ff)] social-icon" href="https://www.youtube.com/@urbAnsoccerfield">
+                        <a aria-label="YouTube" class="hover:text-[#5fa140ff)] social-icon"
+                           href="<?php echo htmlspecialchars(get_content('footer_yt_link', 'https://www.youtube.com/@urbAnsoccerfield')); ?>"
+                           <?php echo $is_admin_mode ? 'data-key="footer_yt_link" data-link="true" class="admin-editable-text"' : ''; ?>>
                             <i class="fab fa-youtube"></i>
                         </a>
                     </li>
                     <li>
-                        <a aria-label="Instagram" class="hover:text-[#5fa140ff)] social-icon" href="https://www.instagram.com/mgdsoccerfield/">
+                        <a aria-label="Instagram" class="hover:text-[#5fa140ff)] social-icon"
+                           href="<?php echo htmlspecialchars(get_content('footer_ig_link', 'https://www.instagram.com/mgdsoccerfield/')); ?>"
+                           <?php echo $is_admin_mode ? 'data-key="footer_ig_link" data-link="true" class="admin-editable-text"' : ''; ?>>
                             <i class="fab fa-instagram"></i>
                         </a>
                     </li>
                     <li>
                         <a aria-label="WhatsApp"
-                           class="hover:text-[#5fa140ff]"
-                           href="https://wa.me/628112653988?text=Halo%20Urban%20Soccer%20Field%2C%20saya%20mau%20booking%20lapangan."
-                           target="_blank" rel="noopener noreferrer">
+                           class="hover:text-[#5fa140ff)]"
+                           href="<?php echo htmlspecialchars(get_content('footer_wa_link', 'https://wa.me/628112653988?text=Halo%20Urban%20Soccer%20Field%2C%20saya%20mau%20booking%20lapangan.')); ?>"
+                           target="_blank" rel="noopener noreferrer"
+                           <?php echo $is_admin_mode ? 'data-key="footer_wa_link" data-link="true" class="admin-editable-text"' : ''; ?>>
                             <i class="fab fa-whatsapp social-icon"></i>
                         </a>
                     </li>
@@ -788,255 +1028,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
             </div>
         </div>
     </div>
+    <div class="text-center text-gray-300 text-sm py-4 border-t border-gray-800 font-normal">
+        <a class="text-[#5fa140ff] hover:underline text-white
+            <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+            href="#"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            data-key="footer_copyright">
+            <?php echo htmlspecialchars(get_content('footer_copyright', '©2025 by')); ?>
+        <a class="text-[#5fa140ff] hover:underline
+            <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+            href="#"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            data-key="footer_copyright">
+            <?php echo htmlspecialchars(get_content('footer_copyrigh', 'MGD Soccer Field Magelang')); ?>
+        </a>
+    </div>
 </footer>
-
-  <div class="text-center text-gray-300 text-sm py-4 border-t border-gray-800 font-normal">
-    ©2025 By
-    <a class="text-[#5fa140ff] hover:underline" href="#">MGD Soccer Field</a> <span class="text-red-600">❤️</span>
-    <a class="text-[#5fa140ff] hover:underline" href="#">Magelang</a>
-  </div>
-</footer>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     AOS.init();
-
-    // JS dari file navbar/hero
-    const sliderWrapper = document.querySelector('.banner-slideshow .slides');
-    const slideItems = document.querySelectorAll('.banner-slideshow .slide');
-    const totalSlides = slideItems.length;
-    let currentIndex = 0;
-
-    function updateSlider() {
-        if (slideItems.length > 0) {
-            const slideWidth = sliderWrapper.parentElement.offsetWidth;
-            sliderWrapper.style.transform = `translateX(${-currentIndex * slideWidth}px)`;
-        }
-    }
-
-    function slide() {
-        currentIndex++;
-        if (currentIndex >= totalSlides) {
-            currentIndex = 0;
-        }
-        updateSlider();
-    }
-
-    window.addEventListener('resize', updateSlider);
-    updateSlider();
-    setInterval(slide, 5000);
-
-    const header = document.querySelector('.header');
-    let lastScrollY = window.scrollY;
-
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            header.classList.add('hidden');
-        } else {
-            header.classList.remove('hidden');
-        }
+    
+    // Inisialisasi Swiper
+    var myGallerySwiper = new Swiper(".myGallerySwiper", {
+        loop: true,
+        spaceBetween: 30,
+        autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
     });
 
-    // JS dari file booking (dengan SweetAlert2)
-    document.addEventListener("DOMContentLoaded", function () {
-        const calendarEl = document.getElementById("calendar");
-        const bookedEvents = <?php echo json_encode($events); ?>;
-
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: "dayGridMonth",
-            locale: 'id',
-            firstDay: 1, // Senin
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var bookingModal = document.getElementById('bookingModal');
+        var changeModal = document.getElementById('changeModal');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            events: <?php echo json_encode($events); ?>,
+            eventClick: function(info) {
+                // Handle event click if needed
+                alert('Event: ' + info.event.title);
             },
-            buttonText: {
-                today: 'Hari Ini',
-                month: 'Bulan',
-                week: 'Minggu',
-                day: 'Hari'
-            },
-            events: bookedEvents,
-            dateClick: function (info) {
-                const clickedDate = info.dateStr;
-                openModal(clickedDate);
+            dateClick: function(info) {
+                // Open modal for booking
+                var clickedDate = info.dateStr;
+                document.getElementById('tanggal').value = clickedDate;
+                fetchBookedTimes(clickedDate);
+                bookingModal.style.display = "flex";
             }
         });
         calendar.render();
 
-        const bookingModal = document.getElementById("bookingModal");
-        const changeModal = document.getElementById("changeModal");
-        const tanggalInput = document.getElementById("tanggal");
-        const jamDropdown = document.getElementById("jamDropdown");
-        const jamDropdownChange = document.getElementById("jamDropdownChange");
-
-        function openModal(date) {
-            tanggalInput.value = date;
-            populateTimeSlots(date, jamDropdown);
-            bookingModal.style.display = "flex";
-        }
-
-        function closeModal() {
-            bookingModal.style.display = "none";
-        }
-
-        function openChangeModal() {
-            populateTimeSlotsChange(new Date().toISOString().slice(0, 10)); // Default to today
-            changeModal.style.display = "flex";
-        }
-
-        function closeChangeModal() {
-            changeModal.style.display = "none";
-        }
-
-        function populateTimeSlots(date, dropdown) {
-            dropdown.innerHTML = "";
-            fetch(`index.php?get_booked_times=1&tanggal=${date}`)
+        function fetchBookedTimes(tanggal) {
+            fetch('?get_booked_times&tanggal=' + tanggal)
                 .then(response => response.json())
                 .then(bookedTimes => {
-                    for (let i = 8; i <= 22; i++) {
-                        const time = `${i.toString().padStart(2, '0')}:00`;
-                        if (!bookedTimes.includes(time)) {
-                            const option = document.createElement("option");
-                            option.value = time.split(':')[0];
-                            option.textContent = time;
-                            dropdown.appendChild(option);
+                    const jamDropdown = document.getElementById('jamDropdown');
+                    jamDropdown.innerHTML = ''; // Kosongkan dropdown
+
+                    const startHour = 8;
+                    const endHour = 22;
+
+                    for (let h = startHour; h < endHour; h++) {
+                        const time = (h < 10 ? '0' : '') + h + ':00';
+                        const option = document.createElement('option');
+                        option.value = time;
+                        option.text = time;
+                        if (bookedTimes.includes(time)) {
+                            option.disabled = true;
+                            option.text += ' (Booked)';
                         }
-                    }
-                    if (dropdown.options.length === 0) {
-                        const option = document.createElement("option");
-                        option.textContent = "Tidak ada jam tersedia";
-                        dropdown.appendChild(option);
-                        dropdown.disabled = true;
-                    } else {
-                        dropdown.disabled = false;
+                        jamDropdown.add(option);
                     }
                 });
         }
-
-        function populateTimeSlotsChange(date) {
-            jamDropdownChange.innerHTML = "";
-            fetch(`index.php?get_booked_times=1&tanggal=${date}`)
-                .then(response => response.json())
-                .then(bookedTimes => {
-                    const allTimes = [];
-                    for (let i = 8; i <= 22; i++) {
-                        allTimes.push(`${i.toString().padStart(2, '0')}:00`);
-                    }
-
-                    const availableTimes = allTimes.filter(time => !bookedTimes.includes(time));
-
-                    if (availableTimes.length > 0) {
-                        availableTimes.forEach(time => {
-                            const option = document.createElement("option");
-                            option.value = time.split(':')[0];
-                            option.textContent = time;
-                            jamDropdownChange.appendChild(option);
-                        });
-                        jamDropdownChange.disabled = false;
-                    } else {
-                        const option = document.createElement("option");
-                        option.textContent = "Tidak ada jam tersedia";
-                        jamDropdownChange.appendChild(option);
-                        jamDropdownChange.disabled = true;
-                    }
-                });
-        }
-
-        document.getElementById('changeForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            fetch('index.php?change=1', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams(data)
-            })
-            .then(response => response.text())
-            .then(result => {
-                Swal.fire({
-                    title: 'Status Update',
-                    text: result,
-                    icon: result.includes('Berhasil') ? 'success' : 'error',
-                    confirmButtonColor: '#388E3C'
-                }).then(() => {
-                    if (result.includes('Berhasil')) {
-                        closeChangeModal();
-                        location.reload();
-                    }
-                });
-            })
-            .catch(error => {
-                Swal.fire('Error', 'Terjadi kesalahan saat memproses permintaan.', 'error');
-                console.error('Error:', error);
-            });
-        });
-
-        document.getElementById('bookingForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams(data)
-            })
-            .then(response => response.text())
-            .then(result => {
-                Swal.fire({
-                    title: 'Status Booking',
-                    text: result,
-                    icon: result.includes('Berhasil') ? 'success' : 'error',
-                    confirmButtonColor: '#388E3C'
-                }).then(() => {
-                    if (result.includes('Berhasil')) {
-                        closeModal();
-                        location.reload();
-                    }
-                });
-            })
-            .catch(error => {
-                Swal.fire('Error', 'Terjadi kesalahan saat memproses permintaan.', 'error');
-                console.error('Error:', error);
-            });
-        });
-
-        document.querySelector('#changeModal input[name="tanggal"]').addEventListener('change', function() {
-            populateTimeSlotsChange(this.value);
-        });
-
-        document.querySelector('.hero-content .btn-book').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('booking-section').scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-
-        const myGallerySwiper = new Swiper(".myGallerySwiper", {
-            spaceBetween: 20,
-            slidesPerView: 1,
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-            },
-        });
     });
+
+    function closeModal() {
+        document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    function openChangeModal() {
+        document.getElementById('changeModal').style.display = 'flex';
+    }
+
+    function closeChangeModal() {
+        document.getElementById('changeModal').style.display = 'none';
+    }
 </script>
 </body>
 </html>
