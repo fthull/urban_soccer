@@ -398,3 +398,356 @@ a {
     justify-content: center;
   }
 }
+ :root {
+            --usf-green: #388E3C;
+            --primary-color: var(--usf-green);
+            --light-color: #fff;
+        }
+
+        /* Gaya yang sudah ada dari file Anda */
+        .carousel {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            display: flex;
+            scroll-behavior: smooth;
+        }
+
+        .carousel-item {
+            scroll-snap-align: start;
+            flex: none;
+            width: 100%;
+        }
+
+        .carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Animasi muncul */
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .fade-in-left {
+            animation: fadeInSlide 1s ease-out forwards;
+        }
+
+        /* About Section Styles */
+        body {
+            font-family: "Poppins", sans-serif;
+        }
+        .background-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -10;
+        }
+        .text-shadow {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+
+        }
+
+        /* Set tinggi semua baris tanggal menjadi 120px */
+        .fc-daygrid-day-frame {
+            height: 120px !important;
+            min-height: 120px !important;
+        }
+
+        /* Area events dengan scroll */
+        .fc-daygrid-day-events {
+            overflow-y: auto;
+            max-height: calc(120px - 30px);
+            /* 30px untuk header tanggal */
+            margin-right: 2px;
+        }
+
+        /* Header tanggal */
+        .fc-daygrid-day-top {
+            height: 30px;
+        }
+
+        /* Event item styling */
+        .fc-event {
+            font-size: 12px;
+            padding: 2px 4px;
+            margin-bottom: 2px;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        /* Warna layanan custom */
+        .fc-event-cuci-eksterior {
+            background-color: #00ff88ff;
+            border-color: #ffffffff;
+        }
+
+        /* Biru */
+        .fc-event-cuci-interior {
+            background-color: #f4ff2cff;
+            border-color: #ffffffff;
+        }
+
+        /* Hijau */
+        .fc-event-detailing {
+            background-color: #d5beffff;
+            border-color: #ffffffff;
+        }
+
+        /* Oranye */
+        .fc-event-cuci-mobil {
+            background-color: #ffffffff;
+            border-color: #ffffffff;
+        }
+
+        /* Merah */
+        .fc-event-salon-mobil-kaca {
+            background-color: #ffb080ff;
+            border-color: #ffffffff;
+        }
+
+        /* Ungu */
+        .fc-event-perbaiki-mesin {
+            background-color: #ffa6c2ff;
+            border-color: #ffffffff;
+        }
+
+        /* Coklat */
+        .fc-event-default {
+            background-color: #ff7676ff;
+            border-color: #ffffffff;
+        }
+
+        /* Abu-abu default jika tidak ada match */
+
+        /* Hilangkan padding yang tidak perlu */
+        .fc-daygrid-day {
+            padding: 0 !important;
+        }
+
+        /* Pastikan sel tanggal memiliki tinggi yang konsisten */
+        .fc-daygrid-day {
+            height: 120px !important;
+        }
+        .fc-button-primary {
+            background-color: var(--usf-green) !important;
+            border-color: var(--usf-green) !important;
+            color: black !important;
+        }
+        .fc-button-primary:hover {
+            background-color: #c0db00 !important;
+            border-color: #c0db00 !important;
+        }
+        .fc-daygrid-day.fc-day-today {
+            background-color: rgba(179, 214, 0, 0.2) !important;
+        }
+        #calendar-container {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Footer Styles */
+        input:focus {
+            color: var(--usf-green);
+        }
+
+        .hover-highlight li:hover,
+        .hover-highlight p:hover {
+            color: var(--usf-green);
+            cursor: pointer;
+        }
+
+        .social-icon {
+            font-size: 1.75rem;
+        }
+
+        /* Navbar & Hero Section */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: transparent;
+            box-shadow: none;
+            transition: transform 0.3s ease;
+        }
+
+        .header.hidden {
+            transform: translateY(-100%);
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .logo img {
+            height: 50px;
+            filter: brightness(0) invert(1);
+        }
+
+        .navbar-menu .nav-links {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            gap: 2rem;
+        }
+
+        .navbar-menu .nav-link {
+            font-weight: 600;
+            color: white;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-menu .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background-color: var(--usf-green);
+            bottom: -5px;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+
+        .navbar-menu .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-book {
+            background-color: var(--usf-green);
+            color: white;
+            border: none;
+            padding: 0.75rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .btn-book:hover {
+            background-color: #55a858;
+            transform: translateY(-2px);
+        }
+
+        /* Gaya tambahan untuk Swiper.js */
+        .swiper-button-next, .swiper-button-prev {
+            color: var(--primary-color) !important;
+            background-color: var(--light-color) !important;
+            border-radius: 50%;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .swiper-button-next:hover, .swiper-button-prev:hover {
+            background-color: var(--primary-color) !important;
+            color: var(--light-color) !important;
+        }
+
+        .swiper-button-next::after, .swiper-button-prev::after {
+            font-size: 18px !important;
+            font-weight: bold;
+        }
+        .swiper-pagination-bullet {
+            background: #ccc !important;
+            opacity: 1 !important;
+        }
+        .swiper-pagination-bullet-active {
+            background: var(--primary-color) !important;
+        }
+
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        @media (max-width: 768px) {
+          .fc-daygrid-day-frame {
+            height: 80px !important;
+            min-height: 80px !important;
+          }
+          .fc-daygrid-day-events {
+            max-height: calc(80px - 20px);
+          }
+          .fc-toolbar-title {
+            font-size: 1.2rem !important;
+          }
+          .fc-event {
+            font-size: 10px; /* Ukuran font diperkecil untuk event */
+            padding: 1px 2px;
+          }
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--usf-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            background-color: #55a858;
+        }

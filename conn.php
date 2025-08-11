@@ -1,12 +1,16 @@
 <?php
-// Kode koneksi database Anda
+// conn.php
+
 $servername = "localhost";
-$username_db = "root";
-$password_db = "";
+$username = "root";
+$password = "";
 $dbname = "urban_soccer";
 
-$conn = new mysqli($servername, $username_db, $password_db, $dbname);
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 
+// Check connection
 if ($conn->connect_error) {
-    die("Koneksi database gagal: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
+?>
