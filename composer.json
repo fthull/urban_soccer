@@ -1,0 +1,17 @@
+{
+    "name": "asustek/urban_soccer",
+    "autoload": {
+        "psr-4": {
+            "Asustek\\UrbanSoccer\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "fthull",
+            "email": "hdytfathl@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^4.5"
+    }
+}

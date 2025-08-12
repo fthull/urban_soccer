@@ -128,7 +128,7 @@ $result = $stmt->get_result();
                     <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Dashboard</p></a></li>
                     <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Booking</p></a></li>
                     <li class="nav-item"><a href="history.php" class="nav-link active"><i class="nav-icon fas fa-chart-pie"></i><p>Histori</p></a></li>
-                    <li class="nav-item"><a href="kasir.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Harga</p></a></li>
+                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Kelola Website</p></a></li>
                     <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Logout</p></a></li>
                 </ul>
             </nav>
@@ -208,7 +208,6 @@ $result = $stmt->get_result();
                                                 <th>No HP</th>
                                                 <th>Jam</th>
                                                 <th>Tanggal</th>
-                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -222,19 +221,7 @@ $result = $stmt->get_result();
                                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
                                                 <td><?= date('H:i', strtotime($row['waktu'])) ?></td>
                                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
-                                                <td>
-                                                    <?php
-                                                    $statusClass = '';
-                                                    if ($row['status'] == 'Selesai') {
-                                                        $statusClass = 'badge badge-success';
-                                                    } elseif ($row['status'] == 'Menunggu') {
-                                                        $statusClass = 'badge badge-warning';
-                                                    } elseif ($row['status'] == 'Ditolak') {
-                                                        $statusClass = 'badge badge-danger';
-                                                    }
-                                                    echo '<span class="' . $statusClass . '">' . htmlspecialchars($row['status']) . '</span>';
-                                                    ?>
-                                                </td>
+                                              
                                             </tr>
                                             <?php endwhile; ?>
                                         </tbody>
