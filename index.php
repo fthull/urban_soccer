@@ -968,7 +968,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         option.disabled = true;
         dropdown.appendChild(option);
       }
-    });}
+
   const dropdown = document.getElementById("jamDropdownChange");
   dropdown.innerHTML = ""; // Kosongkan dulu
 

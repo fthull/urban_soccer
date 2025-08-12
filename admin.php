@@ -261,10 +261,10 @@ $conn->close();
                         </li>
 
                         <li class="nav-item">
-                            <a href="kasir.php" class="nav-link">
+                            <a href="update_web.php" class="nav-link">
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
-                                    Harga
+                                    Web Update
                                 </p>
                             </a>
                         </li>
