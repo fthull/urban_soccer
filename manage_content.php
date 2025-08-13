@@ -121,18 +121,19 @@ $GLOBALS['is_admin_mode'] = true;
         </div>
     </div>
     
-    <script src="AdminLTE-3.1.0/plugins/jquery/jquery.min.js"></script>
-    <script src="AdminLTE-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Tangani perubahan pada elemen teks
-            $(document).on('blur', '.admin-editable-text', function() {
-                var element = $(this);
-                var key = element.data('key');
-                var newContent = element.text();
-                
+   <<script src="AdminLTE-3.1.0/plugins/jquery/jquery.min.js"></script>
+<script src="AdminLTE-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // --- Logika untuk Edit Teks ---
+        $(document).on('blur', '.admin-editable-text', function() {
+            var element = $(this);
+            var key = element.data('key');
+            var newContent = element.text().trim();
+            
+            if (key) {
                 $.ajax({
-                    url: 'manage_content.php',
+                    url: '<?php echo isset($_SESSION['admin']) ? 'manage_content.php' : ''; ?>',
                     type: 'POST',
                     data: {
                         update_content_inline: true,
@@ -146,62 +147,56 @@ $GLOBALS['is_admin_mode'] = true;
                             console.error('Gagal memperbarui ' + key + ': ' + response.message);
                             alert('Gagal memperbarui konten: ' + response.message);
                         }
+                    }
+                });
+            }
+        });
+
+        // --- Logika untuk Edit Gambar Latar Belakang ---
+        $(document).on('click', '.admin-editable-image', function(e) {
+            e.preventDefault(); 
+            // Hindari klik pada teks di dalam elemen gambar
+            if ($(e.target).is('h1, p, a, button')) {
+                return;
+            }
+            $('#heroImageInput').trigger('click');
+        });
+
+        // Tangani perubahan file pada input file yang sudah ada
+        $('#heroImageInput').on('change', function() {
+            var file = this.files[0];
+            var element = $('.admin-editable-image');
+            var key = element.data('key');
+
+            if (file && key) {
+                var formData = new FormData();
+                formData.append('update_content_inline', true);
+                formData.append('key', key);
+                formData.append('file', file);
+                
+                $.ajax({
+                    url: 'manage_content.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            // Perbarui background-image dengan URL baru
+                            element.css('background-image', 'url("' + response.new_value + '")');
+                            console.log('Konten ' + key + ' berhasil diperbarui.');
+                        } else {
+                            console.error('Gagal memperbarui ' + key + ': ' + response.message);
+                            alert('Gagal memperbarui konten: ' + response.message);
+                        }
                     },
                     error: function() {
                         alert('Terjadi kesalahan saat berkomunikasi dengan server.');
                     }
                 });
-            });
-
-            // Tangani klik pada elemen gambar
-            $(document).on('click', '.admin-editable-image', function(e) {
-                e.preventDefault(); 
-                // Cari input file tersembunyi yang terkait
-                $(this).closest('div').find('.hidden-file-input').click();
-            });
-
-            // Tangani perubahan file pada input file
-            $(document).on('change', '.hidden-file-input', function() {
-                var fileInput = this;
-                var file = fileInput.files[0];
-                var element = $(this).closest('div').find('.admin-editable-image');
-                var key = element.data('key');
-                
-                if (file) {
-                    var formData = new FormData();
-                    formData.append('update_content_inline', true);
-                    formData.append('key', key);
-                    formData.append('file', file);
-                    
-                    $.ajax({
-                        url: 'manage_content.php',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            if (response.success) {
-                                // Logika untuk membedakan src dan background-image
-                                if (element.is('img')) {
-                                    // Jika elemen adalah tag <img> (seperti logo)
-                                    element.attr('src', response.new_value);
-                                } else {
-                                    // Jika elemen bukan tag <img> (seperti div dengan background-image)
-                                    element.css('background-image', 'url("' + response.new_value + '")');
-                                }
-                                console.log('Konten ' + key + ' berhasil diperbarui.');
-                            } else {
-                                console.error('Gagal memperbarui ' + key + ': ' + response.message);
-                                alert('Gagal memperbarui konten: ' + response.message);
-                            }
-                        },
-                        error: function() {
-                            alert('Terjadi kesalahan saat berkomunikasi dengan server.');
-                        }
-                    });
-                }
-            });
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>

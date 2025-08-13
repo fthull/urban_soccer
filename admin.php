@@ -1,7 +1,9 @@
 <?php
 session_start();
-
-// Database connection
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("location: login.php");
+    exit;
+}
 include "conn.php";
 global $conn;
 
@@ -159,25 +161,23 @@ $conn->close();
         /* Header tanggal */
         .fc-daygrid-day-top {
             height: 30px;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 5px;
         }
-
-        /* Event item styling */
-        .fc-event {
-            font-size: 12px;
-            padding: 2px 4px;
-            margin-bottom: 2px;
-            white-space: normal;
-            word-break: break-word;
+        
+        /* Mengubah warna teks tanggal, nama hari, dan judul event menjadi putih dan tebal */
+        .fc-daygrid-day-number,
+        .fc-col-header-cell-cushion,
+        .fc-event-title,
+        .fc-event-time {
+            color: #ffffff !important; /* Warna putih */
+            font-weight: bold !important; /* Dicetak tebal */
         }
-
-        /* Hilangkan padding yang tidak perlu */
-        .fc-daygrid-day {
-            padding: 0 !important;
-        }
-
-        /* Pastikan sel tanggal memiliki tinggi yang konsisten */
-        .fc-daygrid-day {
-            height: 120px !important;
+        
+        /* Menghilangkan elemen waktu yang terpisah, seperti "9a" */
+        .fc-event-time {
+            display: none !important;
         }
 
         /* Style untuk detail status di modal */
@@ -201,14 +201,9 @@ $conn->close();
 
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
     <div class="wrapper">
-
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/logom.png" alt="AdminLTELogo" height="60" width="60">
-        </div>
-
-       <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/logom.png" alt="AdminLTELogo" height="60" width="60">
-        </div>
+  <div class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
+    </div>
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="index3.html" class="brand-link">
                 <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
@@ -283,11 +278,23 @@ $conn->close();
                 </nav>
             </div>
         </aside>
-        <br>
-        <br>
-        <br>
-
+    
         <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Dashboard</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
             <section class="content">
                 <div class="container-fluid">
                     <div class="row">

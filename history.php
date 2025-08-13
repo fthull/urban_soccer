@@ -16,10 +16,9 @@ $bookedMenunggu = 0;
 $bookedDitolak = 0;
 
 // Menghitung total riwayat booking (yang sudah lewat waktunya)
-$query_total = "SELECT COUNT(*) AS totalRiwayat FROM booking WHERE waktu < ?";
+$query_total = "SELECT COUNT(*) AS totalRiwayat FROM booking WHERE waktu < CURDATE()";
 $stmt_total = $conn->prepare($query_total);
 if ($stmt_total) {
-    $stmt_total->bind_param("s", $now);
     $stmt_total->execute();
     $result_total = $stmt_total->get_result();
     $data_total = $result_total->fetch_assoc();
@@ -28,10 +27,9 @@ if ($stmt_total) {
 }
 
 // Menghitung booking yang sudah Selesai (sudah lewat waktunya)
-$query_selesai = "SELECT COUNT(*) AS bookedSelesai FROM booking WHERE waktu < ? AND status = 'Selesai'";
+$query_selesai = "SELECT COUNT(*) AS bookedSelesai FROM booking WHERE waktu < CURDATE() AND status = 'Selesai'";
 $stmt_selesai = $conn->prepare($query_selesai);
 if ($stmt_selesai) {
-    $stmt_selesai->bind_param("s", $now);
     $stmt_selesai->execute();
     $result_selesai = $stmt_selesai->get_result();
     $data_selesai = $result_selesai->fetch_assoc();
@@ -40,10 +38,9 @@ if ($stmt_selesai) {
 }
 
 // Menghitung booking yang masih Menunggu (tapi sudah lewat waktunya)
-$query_menunggu = "SELECT COUNT(*) AS bookedMenunggu FROM booking WHERE waktu < ? AND status = 'Menunggu'";
+$query_menunggu = "SELECT COUNT(*) AS bookedMenunggu FROM booking WHERE waktu < CURDATE() AND status = 'Menunggu'";
 $stmt_menunggu = $conn->prepare($query_menunggu);
 if ($stmt_menunggu) {
-    $stmt_menunggu->bind_param("s", $now);
     $stmt_menunggu->execute();
     $result_menunggu = $stmt_menunggu->get_result();
     $data_menunggu = $result_menunggu->fetch_assoc();
@@ -52,10 +49,9 @@ if ($stmt_menunggu) {
 }
 
 // Menghitung booking yang Ditolak (sudah lewat waktunya)
-$query_ditolak = "SELECT COUNT(*) AS bookedDitolak FROM booking WHERE waktu < ? AND status = 'Ditolak'";
+$query_ditolak = "SELECT COUNT(*) AS bookedDitolak FROM booking WHERE waktu < CURDATE() AND status = 'Ditolak'";
 $stmt_ditolak = $conn->prepare($query_ditolak);
 if ($stmt_ditolak) {
-    $stmt_ditolak->bind_param("s", $now);
     $stmt_ditolak->execute();
     $result_ditolak = $stmt_ditolak->get_result();
     $data_ditolak = $result_ditolak->fetch_assoc();
@@ -64,9 +60,8 @@ if ($stmt_ditolak) {
 }
 
 // Query untuk menampilkan data histori dalam tabel
-$query = "SELECT * FROM booking WHERE waktu < ? ORDER BY waktu DESC";
+$query = "SELECT * FROM booking WHERE waktu < CURDATE() ORDER BY waktu DESC";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("s", $now);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -88,7 +83,6 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/summernote/summernote-bs4.min.css">
     <style>
-        /* CSS yang disinkronkan dari tab_booking.php */
         .status-select { font-weight: bold; color: #ffffff; background-color: #3a3f4b; border: 1px solid #666; }
         .status-selesai { color: #28d17c; background-color: #1e2f1e; border-color: #28d17c; }
         .status-menunggu { color: #f7c948; background-color: #3a2f1e; border-color: #f7c948; }
@@ -105,8 +99,8 @@ $result = $stmt->get_result();
 </head>
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
 <div class="wrapper">
-    <div class="preloader flex-column justify-content-center align-items-center">
-        <img class="animation__shake" src="dist/img/logom.png" alt="AdminLTELogo" height="60" width="60">
+      <div class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
     </div>
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="index3.html" class="brand-link">
@@ -155,39 +149,51 @@ $result = $stmt->get_result();
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-3 col-6">
-                        <div class="small-box bg-info">
+                        <div class="small-box bg-warning">
                             <div class="inner">
-                                <h3><?= $totalRiwayat ?></h3>
-                                <p>Total Riwayat</p>
+                                <h4><b>Menunggu</b></h4>
+                                <h3><?= $bookedMenunggu ?></h3>
                             </div>
-                            <div class="icon"><i class="ion ion-ios-list"></i></div>
+                            <br>
+                            <div class="icon">
+                                <i class="ion ion-loop"></i>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-success">
                             <div class="inner">
+                                <h4><b>Selesai</b></h4>
                                 <h3><?= $bookedSelesai ?></h3>
-                                <p>Booking Selesai</p>
                             </div>
-                            <div class="icon"><i class="ion ion-checkmark-round"></i></div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box bg-warning">
-                            <div class="inner">
-                                <h3><?= $bookedMenunggu ?></h3>
-                                <p>Booking Menunggu</p>
+                            <br>
+                            <div class="icon">
+                                <i class="ion ion-checkmark-round"></i>
                             </div>
-                            <div class="icon"><i class="ion ion-loop"></i></div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-danger">
                             <div class="inner">
+                                <h4><b>Ditolak</b></h4>
                                 <h3><?= $bookedDitolak ?></h3>
-                                <p>Booking Ditolak</p>
                             </div>
-                            <div class="icon"><i class="ion ion-close-round"></i></div>
+                            <br>
+                            <div class="icon">
+                                <i class="ion ion-close-round"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-info">
+                            <div class="inner">
+                                <h4><b>Total Riwayat</b></h4>
+                                <h3><?= $totalRiwayat ?></h3>
+                            </div>
+                            <br>
+                            <div class="icon">
+                                <i class="ion ion-ios-list"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -221,7 +227,6 @@ $result = $stmt->get_result();
                                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
                                                 <td><?= date('H:i', strtotime($row['waktu'])) ?></td>
                                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
-                                              
                                             </tr>
                                             <?php endwhile; ?>
                                         </tbody>
