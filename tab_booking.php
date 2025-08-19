@@ -1,15 +1,18 @@
 <?php
 session_start();
 include "conn.php";
+include "content_helper.php";
+
 global $conn;
 
-// Deteksi apakah ini request AJAX dari kalender atau request halaman biasa
+// Deteksi apakah ini request AJAX atau request halaman biasa
 $is_ajax_request = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
 // ==============================================
 // BAGIAN AJAX ENDPOINT UNTUK PENGELOLAAN DATA
 // ==============================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$is_ajax_request) {
+    // Handling POST requests from the table actions
     header('Content-Type: application/json');
 
     $action = $_POST['action'] ?? '';
@@ -34,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update_status') {
         $status = $_POST['status'] ?? '';
+        // Perhatikan konsistensi status, gunakan 'Booked' dengan huruf kapital
         if (in_array($status, ['Menunggu', 'Booked'])) {
             $stmt = $conn->prepare("UPDATE booking SET status = ? WHERE id = ?");
             if ($stmt === false) {
@@ -58,7 +62,7 @@ if (isset($_GET['source']) && $_GET['source'] == 'calendar') {
     $result = $conn->query($sql);
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $eventColor = '#dc3545'; // Default: Merah
+            $eventColor = '#dc3545';
             if (isset($row['status'])) {
                 if ($row['status'] === 'Menunggu') {
                     $eventColor = '#ffc107'; // Kuning
@@ -112,6 +116,22 @@ $totalBookings = $jumlahMenunggu + $bookedAll;
 $bookingDetail = [];
 $sql_booking = "SELECT * FROM booking WHERE waktu >= NOW() ORDER BY tanggal ASC, waktu ASC LIMIT 10";
 $result2 = $conn->query($sql_booking);
+$search_query = $_GET['q'] ?? '';
+$is_search_active = !empty($search_query);
+
+if ($is_search_active) {
+    // Jika ada kata kunci pencarian, ambil data yang lebih ringkas
+    $stmt = $conn->prepare("SELECT id, nama, sewa_sepatu, sewa_rompi, total_harga FROM booking WHERE nama LIKE ? ORDER BY tanggal DESC, waktu DESC");
+    $search_param = '%' . $search_query . '%';
+    $stmt->bind_param("s", $search_param);
+    $stmt->execute();
+    $result2 = $stmt->get_result();
+} else {
+    // Jika tidak ada kata kunci, ambil data normal
+    $sql_booking = "SELECT id, nama, no_hp, tanggal, waktu, status, bukti_pembayaran FROM booking ORDER BY tanggal DESC, waktu DESC";
+    $result2 = $conn->query($sql_booking);
+}
+
 if ($result2) {
     while ($row = $result2->fetch_assoc()) {
         $bookingDetail[] = $row;
@@ -138,25 +158,48 @@ if ($result2) {
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/summernote/summernote-bs4.min.css">
     <style>
-        .status-select { font-weight: bold; color: #ffffff; background-color: #3a3f4b; border: 1px solid #666; }
-        .status-selesai { color: #28d17c; background-color: #1e2f1e; border-color: #28d17c; }
-        .status-menunggu { color: #f7c948; background-color: #3a2f1e; border-color: #f7c948; }
+        .status-select { 
+            font-weight: bold; 
+            color: #ffffff; 
+            background-color: #3a3f4b; 
+            border: 1px solid #666; 
+            padding: 3px; 
+            border-radius: 4px; 
+        }
+        /* Perbaikan CSS untuk status `booked` agar konsisten */
+        .status-select.booked { 
+            color: #28d17c; 
+            background-color: #1e2f1e; 
+            border-color: #28d17c; 
+        }
+        .status-select.menunggu { 
+            color: #f7c948; 
+            background-color: #3a2f1e; 
+            border-color: #f7c948; 
+        }
         body { color: #f1f1f1; }
         table.table { background-color: #2d2d3a; color: #ffffff; border-color: #444; }
         thead.table-secondary { background-color: #3a3a4a !important; color: #ffffff !important; }
         table tbody tr:nth-child(odd) { background-color: #2c2f38; }
         table tbody tr:nth-child(even) { background-color: #2a2d36; }
         table td, table th { border: 1px solid #555; }
-        select.status-select { background-color: #3a3a4a; color: #fff; border: 1px solid #666; padding: 3px; border-radius: 4px; }
         .btn-danger { background-color: #e74c3c; border: none; color: #fff; }
         .btn-danger:hover { background-color: #c0392b; }
         .export-section { text-align: center; margin-top: 20px; }
         .export-section .btn { font-weight: bold; }
+        .bukti-link { color: #5bc0de; text-decoration: none; }
+        .bukti-link:hover { text-decoration: underline; }
+        .table td img {
+            max-width: 100px;
+            height: auto;
+            display: block;
+            margin: auto;
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
 <div class="wrapper">
-      <div class="preloader flex-column justify-content-center align-items-center">
+    <div class="preloader flex-column justify-content-center align-items-center">
         <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
     </div>
 
@@ -187,7 +230,7 @@ if ($result2) {
             </nav>
         </div>
     </aside>
-   <div class="content-wrapper">
+    <div class="content-wrapper">
         <div class="content-header">
             <div class="container-fluid">
                 <div class="row mb-2">
@@ -211,10 +254,32 @@ if ($result2) {
                     <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booked Today</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Total Booking</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
                 </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Cari berdasarkan nama..." value="<?= htmlspecialchars($search_query) ?>">
+                        </div>
+                    </div>
+                </div>
                 <div style="max-height: 500px; overflow-y: auto;">
                     <table class="table table-bordered table-striped">
                         <thead class="table-secondary" style="position: sticky; top: 0; z-index: 1;">
-                            <tr><th>No.</th><th>Nama</th><th>No HP</th><th>Jam</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
+                            <tr>
+                                <th>No.</th>
+                                <th>Nama</th>
+                                <?php if (!$is_search_active): ?>
+                                <th>No HP</th>
+                                <th>Jam</th>
+                                <th>Tanggal</th>
+                                <th>Bukti Pembayaran</th>
+                                <th>Status</th>
+                                <?php else: ?>
+                                <th>Sewa Sepatu</th>
+                                <th>Sewa Rompi</th>
+                                <th>Total Harga</th>
+                                <?php endif; ?>
+                                <th>Aksi</th>
+                            </tr>
                         </thead>
                         <tbody>
                             <?php
@@ -225,15 +290,30 @@ if ($result2) {
                             <tr id="row-<?= $row['id'] ?>">
                                 <td><?= $no++ ?></td>
                                 <td><?= htmlspecialchars($row['nama']) ?></td>
+                                <?php if (!$is_search_active): ?>
                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
                                 <td><?= date('H:i', strtotime($row['waktu'])) ?></td>
                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
                                 <td>
-                                    <select class="status-select" onchange="ubahStatus(<?= htmlspecialchars($row['id']) ?>, this.value)">
+                                    <?php if (!empty($row['bukti_pembayaran'])): ?>
+                                        <a href="uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>" target="_blank">
+                                            <img src="uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>" alt="Bukti Pembayaran" style="width:100px; height:auto; display:block; margin:auto;">
+                                        </a>
+                                    <?php else: ?>
+                                        Tidak Ada Bukti
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <select class="status-select <?= strtolower($row['status']) ?>" onchange="ubahStatus(<?= htmlspecialchars($row['id']) ?>, this.value)">
                                         <option value="Menunggu" <?= ($row['status'] == 'Menunggu') ? 'selected' : '' ?>>Menunggu</option>
                                         <option value="Booked" <?= ($row['status'] == 'Booked') ? 'selected' : '' ?>>Booked</option>
                                     </select>
                                 </td>
+                                <?php else: ?>
+                                <td><?= htmlspecialchars($row['sewa_sepatu']) ?></td>
+                                <td><?= htmlspecialchars($row['sewa_rompi']) ?></td>
+                                <td>Rp <?= number_format(htmlspecialchars($row['total_harga']), 0, ',', '.') ?></td>
+                                <?php endif; ?>
                                 <td>
                                     <button class="btn btn-sm btn-danger" onclick="hapusBooking(<?= htmlspecialchars($row['id']) ?>)">Hapus</button>
                                 </td>
@@ -242,7 +322,7 @@ if ($result2) {
                                 endforeach;
                             else:
                             ?>
-                                <tr><td colspan="7" class="text-center">Tidak ada data booking yang akan datang.</td></tr>
+                                <tr><td colspan="<?= $is_search_active ? '5' : '8' ?>" class="text-center">Tidak ada data booking yang ditemukan.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -285,6 +365,7 @@ if ($result2) {
 <script src="AdminLTE-3.1.0/dist/js/pages/dashboard.js"></script>
 
 <script>
+    // Fungsi JavaScript untuk menghapus booking
     function hapusBooking(id) {
         if (confirm("Yakin ingin menghapus data booking ini dari database?")) {
             fetch('tab_booking.php', {
@@ -300,6 +381,7 @@ if ($result2) {
         }
     }
 
+    // Fungsi JavaScript untuk mengubah status booking
     function ubahStatus(id, status) {
         if (confirm("Yakin ingin mengubah status booking ini menjadi '" + status + "'?")) {
             fetch('tab_booking.php', {
@@ -311,10 +393,25 @@ if ($result2) {
                     alert("Status berhasil diperbarui.");
                     location.reload();
                 } else { alert("Gagal memperbarui status: " + (data.message || 'Unknown error')); }
+                
             }).catch(err => { console.error("Error:", err); alert("Terjadi kesalahan saat memperbarui status."); });
         }
     }
 
+    // Event listener untuk input pencarian
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const query = this.value;
+        const currentUrl = new URL(window.location.href);
+        
+        if (query) {
+            currentUrl.searchParams.set('q', query);
+        } else {
+            currentUrl.searchParams.delete('q');
+        }
+        window.location.href = currentUrl.toString();
+    });
+
+    // Menghilangkan preloader saat halaman selesai dimuat
     window.addEventListener('load', function () {
         const preloader = document.querySelector('.preloader');
         if (preloader) { preloader.style.display = 'none'; }

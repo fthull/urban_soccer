@@ -12,16 +12,19 @@ if (isset($_GET['load'])) {
     $events = [];
     $result = $conn->query("SELECT id, nama, waktu, status FROM booking ORDER BY waktu ASC, tanggal ASC");
 
-    while ($row = $result->fetch_assoc()) {
-        $status = $row['status'] === 'Booked' ? 'Booked' : 'Menunggu';
-        $eventColor = '#dc3545';
-        if (isset($row['status'])) {
-            if ($row['status'] === 'Menunggu') {
-                $eventColor = '#ffc107'; // Kuning
-            } else if ($row['status'] === 'Booked') {
-                $eventColor = '#28a745'; // Hijau
-            }
+   while ($row = $result->fetch_assoc()) {
+    $status = $row['status'] === 'Booked' ? 'Booked' : 'Menunggu';
+    $eventColor = '#dc3545'; // Warna default, bisa Anda ganti
+
+    if (isset($row['status'])) {
+        // PERBAIKAN: Mengganti kode warna sesuai permintaan
+        if ($row['status'] === 'Menunggu') {
+            $eventColor = '#e99700ff'; // Kode warna orens
+        } else if ($row['status'] === 'booked') { // PERHATIKAN: status di sini harus konsisten dengan yang di-database, yaitu 'booked' (huruf kecil).
+            $eventColor = '#d51d30ff'; // Kode warna merah
         }
+    }
+
         $events[] = [
             'id' => $row['id'],
             'title' => htmlspecialchars($row['nama']) . ' (' . date('H:i', strtotime($row['waktu'])) . ')',
@@ -42,7 +45,7 @@ if (isset($_GET['booking_id'])) {
     header('Content-Type: application/json');
     $id = intval($_GET['booking_id']);
 
-    $stmt = $conn->prepare("SELECT id, nama, no_hp, tanggal, waktu FROM booking WHERE id = ?");
+   $stmt = $conn->prepare("SELECT id, nama, no_hp, tanggal, waktu, status FROM booking WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -62,12 +65,12 @@ if (isset($_GET['booking_id'])) {
 // ==============================================
 
 // Query untuk statistik dashboard
-$jumlahMenunggu = 0;
+$jumlahProses = 0;
 $bookedAll = 0;
 $bookedToday = 0;
 
 $stmt_stats = $conn->prepare("SELECT 
-    (SELECT COUNT(*) FROM booking WHERE status = 'Menunggu') AS jumlahMenunggu,
+    (SELECT COUNT(*) FROM booking WHERE status = 'Menunggu') AS jumlahProses,
     (SELECT COUNT(*) FROM booking WHERE status = 'Booked') AS bookedAll,
     (SELECT COUNT(*) FROM booking WHERE status = 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
 ");
@@ -76,7 +79,7 @@ if ($stmt_stats) {
     $stmt_stats->execute();
     $result_stats = $stmt_stats->get_result();
     if ($data_stats = $result_stats->fetch_assoc()) {
-        $jumlahMenunggu = $data_stats['jumlahMenunggu'];
+        $jumlahProses = $data_stats['jumlahProses'];
         $bookedAll = $data_stats['bookedAll'];
         $bookedToday = $data_stats['bookedToday'];
     }
@@ -84,7 +87,7 @@ if ($stmt_stats) {
 }
 
 // Perhitungan total booking
-$totalBookings = $jumlahMenunggu + $bookedAll;
+$totalBookings = $jumlahProses + $bookedAll;
 
 $conn->close();
 ?>
@@ -129,7 +132,7 @@ $conn->close();
         }
 
         /* Status Menunggu */
-        .status-menunggu {
+        .status-Menunggu {
             color: #f7c948;
             /* kuning terang */
             background-color: #3a2f1e;
@@ -215,7 +218,7 @@ $conn->close();
             background-color: #1e2f1e;
         }
 
-        .status-menunggu {
+        .status-Menunggu {
             color: #f7c948;
             background-color: #3a2f1e;
         }
@@ -387,8 +390,6 @@ $conn->close();
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
                                     Kelolah Website
-                                </p>
-                            </a>
                         </li>
 
                         <li class="nav-item">
