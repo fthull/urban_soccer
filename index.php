@@ -1,4 +1,3 @@
-
 <?php
 // Koneksi ke database dan helper konten
 include "conn.php";
@@ -9,7 +8,11 @@ $is_admin_mode = isset($GLOBALS['is_admin_mode']) && $GLOBALS['is_admin_mode'] =
 
 // Ambil semua konten dari database
 $site_content = getAllContent($conn);
-
+$sql_delete = "DELETE FROM booking WHERE status = 'pending' AND waktu_booking < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+$stmt_delete = $conn->prepare($sql_delete);
+$stmt_delete->bind_param("i", $time_limit_minutes);
+$stmt_delete->execute();
+$stmt_delete->close();
 /**
  * Fungsi helper untuk mendapatkan konten dari database atau nilai default.
  * Digunakan untuk mengisi data ke dalam HTML.
@@ -19,146 +22,201 @@ $site_content = getAllContent($conn);
  * @return string Nilai konten
  */
 function get_content($key, $default = '') {
-global $site_content;
-// htmlspecialchars() digunakan untuk mencegah XSS
-return isset($site_content[$key]) ? htmlspecialchars($site_content[$key]) : htmlspecialchars($default);
+    global $site_content;
+    // htmlspecialchars() digunakan untuk mencegah XSS
+    return isset($site_content[$key]) ? htmlspecialchars($site_content[$key]) : htmlspecialchars($default);
 }
 
-// Logika untuk menambahkan booking baru
-date_default_timezone_set('Asia/Jakarta');
+// =========================================================================
+// HANDLER BARU: UNTUK MENYIMPAN KONTEN YANG DIEDIT OLEH ADMIN
+// =========================================================================
+if (isset($_POST['action']) && $_POST['action'] === 'save_content') {
+    $key = $_POST['key'] ?? '';
+    $value = $_POST['value'] ?? '';
 
-/**
- * Handle POST request untuk booking baru.
- * Menerima data nama, no_hp, tanggal, dan jam dari form.
- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['change'])) {
+    // Bersihkan nilai untuk mencegah SQL Injection
+    $clean_value = $conn->real_escape_string($value);
+    $clean_key = $conn->real_escape_string($key);
+
+    // SQL UPDATE/INSERT untuk memperbarui data
+    // Menggunakan nama tabel 'site_content' sesuai database Anda
+    $sql = "INSERT INTO site_content (content_key, content_value) 
+             VALUES ('$clean_key', '$clean_value') 
+             ON DUPLICATE KEY UPDATE content_value = '$clean_value'";
+
+    if ($conn->query($sql) === TRUE) {
+        echo "success"; // Respon ini akan ditangkap oleh JavaScript
+    } else {
+        echo "error";
+    }
+    exit;
+}
+
+// =========================================================================
+// HANDLER UNTUK SUBMIT BOOKING BARU DARI JAVASCRIPT
+// =========================================================================
+date_default_timezone_set('Asia/Jakarta');
+if (isset($_POST['action']) && $_POST['action'] === 'submit_booking') {
     $nama = $_POST['nama'] ?? '';
     $no_hp = $_POST['no_hp'] ?? '';
     $tanggal = $_POST['tanggal'] ?? '';
     $jam = $_POST['jam'] ?? '';
 
-    // --- VALIDASI BARU UNTUK TANGGAL DAN WAKTU YANG SUDAH LEWAT ---
-    $current_date = date('Y-m-d');
-    $current_time = date('H:i');
+    // Ambil data sewa tambahan dari JSON
+    $sewa_items = json_decode($_POST['sewa_items'] ?? '{}', true);
+    $sewa_sepatu = $sewa_items['sewaSepatu'] ?? 0;
+    $sewa_rompi = $sewa_items['sewaRompi'] ?? 0;
+    // Kolom 'sewa_lainnya' dihapus
 
-    if ($tanggal < $current_date) {
-        echo "Gagal: Anda tidak bisa memesan untuk tanggal yang sudah lewat.";
-        exit;
-    }
+    if (!empty($nama) && !empty($no_hp) && !empty($tanggal) && !empty($jam)) {
+        // Gabungkan tanggal dan jam untuk kolom 'waktu' bertipe datetime
+        $waktu_datetime = $tanggal . ' ' . $jam . ':00';
+    
+        // Cek apakah slot sudah dibooking atau pending
+        $cek_stmt = $conn->prepare("SELECT COUNT(*) FROM booking WHERE tanggal = ? AND waktu = ?");
+        $cek_stmt->bind_param("ss", $tanggal, $waktu_datetime);
+        $cek_stmt->execute();
+        $cek_stmt->bind_result($count);
+        $cek_stmt->fetch();
+        $cek_stmt->close();
 
-    // Jika tanggal yang dipesan adalah hari ini, cek apakah jamnya sudah lewat
-    if ($tanggal === $current_date && $jam < $current_time) {
-        echo "Gagal: Anda tidak bisa memesan untuk jam yang sudah lewat di hari ini.";
-        exit;
-    }
-    // --- AKHIR VALIDASI BARU ---
+        if ($count > 0) {
+            echo "Gagal: Slot ini sudah dibooking.";
+            exit();
+        }
+        
+        // =========================================================================
+        // PERUBAHAN PENTING: Ambil harga dari database, bukan nilai statis
+        // =========================================================================
+        $harga_sewa_lapangan = floatval(get_content('field_rent_price', '700000'));
+        $harga_sewa_sepatu = floatval(get_content('booking_shoes_price', '10000'));
+        $harga_sewa_rompi = floatval(get_content('booking_vests_price', '5000'));
+        // Variabel harga sewa lainnya dihapus
 
-    // Gabungkan tanggal dan jam menjadi format datetime
-    $waktu_penuh = $tanggal . ' ' . $jam . ':00';
+        $total_harga = $harga_sewa_lapangan + 
+                        ($sewa_sepatu * $harga_sewa_sepatu) +
+                        ($sewa_rompi * $harga_sewa_rompi);
 
-    // Cek apakah waktu sudah dibooking
-    $cek = $conn->prepare("SELECT COUNT(*) FROM booking WHERE waktu = ?");
-    $cek->bind_param("s", $waktu_penuh);
-    $cek->execute();
-    $cek->bind_result($count);
-    $cek->fetch();
-    $cek->close();
+        // Jika slot tersedia, simpan data booking
+        $status = 'pending'; // Gunakan 'pending' sesuai skema database
+        
+        // PERBAIKAN: Tambahkan 'bukti_pembayaran' dan 'waktu_booking'
+        $waktu_booking = date('Y-m-d H:i:s'); // Waktu saat booking dibuat
+        $bukti_pembayaran = NULL; // Masih kosong saat booking awal
 
-    if ($count > 0) {
-        echo "Waktu sudah dibooking!";
-        exit;
-    }
+        // PERBAIKAN: Hapus 'sewa_lainnya' dari query INSERT
+        $stmt = $conn->prepare("INSERT INTO booking (nama, no_hp, tanggal, waktu, status, sewa_sepatu, sewa_rompi, total_harga, bukti_pembayaran, waktu_booking) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        // PERBAIKAN: Hapus 'i' dari bind_param
+        $stmt->bind_param("sssssiiiss", $nama, $no_hp, $tanggal, $waktu_datetime, $status, $sewa_sepatu, $sewa_rompi, $total_harga, $bukti_pembayaran, $waktu_booking);
 
-    // Insert data booking baru ke database
-    $stmt = $conn->prepare("INSERT INTO booking (nama, no_hp, tanggal, waktu) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $nama, $no_hp, $tanggal, $waktu_penuh);
-
-    if ($stmt->execute()) {
-        echo "Berhasil";
+        if ($stmt->execute()) {
+            echo "Berhasil"; // Respon ini akan ditangkap oleh JavaScript
+        } else {
+            error_log("SQL Error: " . $stmt->error);
+            echo "Gagal: Terjadi kesalahan saat menyimpan data.";
+        }
     } else {
-        echo "Gagal";
+        echo "Gagal: Data tidak lengkap.";
     }
-    $stmt->close();
-    exit;
+    exit();
 }
 
 /**
  * Handler untuk permintaan AJAX yang mengambil detail booking harian.
- * Mengembalikan nama pemesan dan status untuk setiap slot.
  */
 if (isset($_GET['get_daily_bookings']) && isset($_GET['tanggal'])) {
+    header('Content-Type: application/json');
     $tanggal = $_GET['tanggal'];
     $daily_bookings = [];
 
-    // Daftar semua slot waktu
     $all_slots = [
         '06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30',
         '18:00', '19:30', '21:00', '22:30'
     ];
 
-    // Ambil data booking dari database
-    $stmt = $conn->prepare("SELECT waktu FROM booking WHERE DATE(waktu) = ?");
+    $stmt = $conn->prepare("SELECT TIME_FORMAT(waktu, '%H:%i') AS waktu_only, status FROM booking WHERE tanggal = ?");
     $stmt->bind_param("s", $tanggal);
     $stmt->execute();
     $result = $stmt->get_result();
-
+    
     $booked_data = [];
     while ($row = $result->fetch_assoc()) {
-        $booked_data[date('H:i', strtotime($row['waktu']))] = true;
-    }
-
-    // Gabungkan data booking dengan semua slot waktu
-    foreach ($all_slots as $slot_start_time) {
-        $daily_bookings[$slot_start_time] = [
-            'booked' => isset($booked_data[$slot_start_time]),
-            'nama' => null
+        $booked_data[$row['waktu_only']] = [
+            'status' => $row['status']
         ];
     }
+    $stmt->close();
 
+    foreach ($all_slots as $slot_start_time) {
+        $daily_bookings[$slot_start_time] = [
+            'status' => $booked_data[$slot_start_time]['status'] ?? 'available'
+        ];
+    }
+    
     echo json_encode($daily_bookings);
-    exit;
+    exit();
 }
 
-/**
- * Handler untuk permintaan AJAX yang mengambil data booking mingguan.
- */
+// =========================================================================
+// PERBAIKAN: Handler untuk booking mingguan
+// =========================================================================
 if (isset($_GET['get_weekly_bookings']) && isset($_GET['start_date'])) {
+    header('Content-Type: application/json');
     $start_date = $_GET['start_date'];
     $end_date = date('Y-m-d', strtotime($start_date . ' +6 days'));
     $weekly_bookings = [];
 
-    $stmt = $conn->prepare("SELECT waktu, status FROM booking WHERE DATE(waktu) BETWEEN ? AND ?");
+    $stmt = $conn->prepare("SELECT tanggal, TIME_FORMAT(waktu, '%H:%i') AS waktu_only, status FROM booking WHERE tanggal BETWEEN ? AND ?");
     $stmt->bind_param("ss", $start_date, $end_date);
     $stmt->execute();
     $result = $stmt->get_result();
-
+    
     while ($row = $result->fetch_assoc()) {
-        $dayOfWeek = date('N', strtotime($row['waktu'])); // 1 (Senin) hingga 7 (Minggu)
-        $time = date('H:i', strtotime($row['waktu']));
-        if (!isset($weekly_bookings[$dayOfWeek])) {
-            $weekly_bookings[$dayOfWeek] = [];
+        $tanggal = $row['tanggal'];
+        $time = $row['waktu_only'];
+        
+        if (!isset($weekly_bookings[$tanggal])) {
+            $weekly_bookings[$tanggal] = [];
         }
-        $weekly_bookings[$dayOfWeek][$time] = [
-            'booked' => true,
+        $weekly_bookings[$tanggal][$time] = [
             'status' => $row['status']
         ];
     }
-
+    
     echo json_encode($weekly_bookings);
-    exit;
+    exit();
 }
 
-/**
- * Handle POST request untuk mengubah booking yang sudah ada.
- */
+// Handler untuk mengubah status booking (contoh untuk admin)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    header('Content-Type: application/json');
+    $id = $_POST['id'] ?? null;
+    $status_baru = $_POST['status'] ?? null;
+
+    if ($id && $status_baru) {
+        $stmt = $conn->prepare("UPDATE booking SET status = ? WHERE id = ?");
+        $stmt->bind_param("si", $status_baru, $id);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $stmt->error]);
+        }
+        $stmt->close();
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID atau status tidak valid.']);
+    }
+    exit();
+}
+
+// Handler untuk mengubah booking (contoh untuk admin)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     $nama = $_POST['nama'] ?? '';
     $no_hp = $_POST['no_hp'] ?? '';
     $tanggal = $_POST['tanggal'] ?? '';
     $jam = $_POST['jam'] ?? '';
-    $waktu_baru = $tanggal . ' ' . $jam . ':00';
 
-    // Cari ID booking berdasarkan nama dan no_hp
     $cek = $conn->prepare("SELECT id FROM booking WHERE nama = ? AND no_hp = ?");
     $cek->bind_param("ss", $nama, $no_hp);
     $cek->execute();
@@ -171,7 +229,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         exit;
     }
 
-    // Cek apakah waktu baru sudah dibooking oleh orang lain
+    $waktu_baru = $tanggal . ' ' . $jam . ':00';
+
     $cekWaktu = $conn->prepare("SELECT COUNT(*) FROM booking WHERE waktu = ? AND id != ?");
     $cekWaktu->bind_param("si", $waktu_baru, $booking_id);
     $cekWaktu->execute();
@@ -184,7 +243,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
         exit;
     }
 
-    // Update data booking
     $update = $conn->prepare("UPDATE booking SET tanggal = ?, waktu = ? WHERE id = ?");
     $update->bind_param("ssi", $tanggal, $waktu_baru, $booking_id);
     if ($update->execute()) {
@@ -194,6 +252,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
     }
     $update->close();
     exit;
+}
+
+// Handler untuk menghapus booking (contoh untuk admin)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_booking') {
+    header('Content-Type: application/json');
+    $id = $_POST['id'] ?? null;
+    if ($id) {
+        $stmt = $conn->prepare("DELETE FROM booking WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $stmt->error]);
+        }
+        $stmt->close();
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID tidak valid.']);
+    }
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -220,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 
 <style>
 :root {
---usf-green: #1c2531;
+--usf-green: #388E3C;
 --primary-color: var(--usf-green);
 --light-color: #fff;
 }
@@ -259,8 +337,8 @@ transform: translateX(0);
 animation: fadeInSlide 1s ease-out forwards;
 }
 .header-booking {
-            background-color: #ffffffff;
-            color: #000000ff;
+            background-color: #1c2531;
+            color: #fff;
             text-align: center;
             padding: 3rem 1rem 2rem;
             margin-bottom: 2rem;
@@ -270,7 +348,7 @@ animation: fadeInSlide 1s ease-out forwards;
             font-size: 1.5rem; /* Ukuran font diubah menjadi lebih kecil */
             margin: 0;
             font-weight: 700;
-            color: #161616ff;
+            color: #dbe0e9;
         }
 
         .header-booking h1 span {
@@ -295,7 +373,7 @@ animation: fadeInSlide 1s ease-out forwards;
         .container-booking {
             margin: 2rem auto;
             padding: 2rem;
-            background: #48536bff;
+            background: #353b48;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         }
@@ -330,22 +408,18 @@ animation: fadeInSlide 1s ease-out forwards;
             padding: 0.5rem 1rem;
             border-radius: 8px;
             border: 1px solid #5a6473;
-            background-color: #313d54ff;
+            background-color: #2f343e;
             color: #fff;
             outline: none;
             width: 200px;
         }
 
-/* Pastikan ini adalah kode untuk kontainer grid */
-/* Atur kontainer grid */
-/* Tambahkan ID #schedule untuk selektor yang lebih spesifik */
-.schedule-grid {
-    /* Mengaktifkan tata letak grid dan menimpa gaya flexbox yang mungkin ada */
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-   
-}
+        /* === SCHEDULE SLOTS from coba.php === */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
 
         @media (max-width: 1024px) {
             .schedule-grid {
@@ -409,7 +483,7 @@ animation: fadeInSlide 1s ease-out forwards;
             display: block;
             width: 100%;
             padding: 0.5rem 0.8rem; /* Mengubah ukuran padding */
-            background-color: #283fa7ff;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 8px;
@@ -428,11 +502,11 @@ animation: fadeInSlide 1s ease-out forwards;
             cursor: not-allowed;
         }
 
-       .weekly-schedule-container {
-    overflow: auto; /* Memungkinkan scrolling */
-    max-width: 1100px; /* Gunakan max-width agar lebih responsif */
-    margin: 0 auto; /* Ini yang membuat elemen menjadi di tengah */
-}
+        /* === NEW WEEKLY SCHEDULE STYLES (UPDATED FOR STICKY HEADER) === */
+        .weekly-schedule-container {
+            overflow: auto; /* Memungkinkan scrolling */
+            
+        }
         .weekly-schedule-table {
             display: flex;
             flex-direction: column;
@@ -440,7 +514,7 @@ animation: fadeInSlide 1s ease-out forwards;
             border-radius: 12px;
             overflow: hidden;
             margin-top: 2rem;
-            min-width: 800px; /* Lebar minimum untuk memastikan scroll */
+            min-width: 600px; /* Lebar minimum untuk memastikan scroll */
         }
         .weekly-schedule-header {
             display: grid;
@@ -480,243 +554,266 @@ animation: fadeInSlide 1s ease-out forwards;
             z-index: 5;
         }
         .weekly-schedule-cell.booked {
-            background-color: var(--usf-green); /* Warna hijau gelap baru */
+            background-color: #af0202ff; /* Warna hijau gelap baru */
             color: #fff;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.2s;
         }
         .weekly-schedule-cell.booked:hover {
-            background-color: #35448cff; /* Warna hover yang lebih cerah */
+            background-color: #972222ff; /* Warna hover yang lebih cerah */
         }
-
-
-        /* Styles for the new modals from coba.php */
-        /* === MODAL === */
-       /* --- Perbaikan Z-Index Modal --- */
+          
+        .weekly-schedule-cell.pending {
+            background-color: #a79102ff; /* Warna hijau gelap baru */
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .weekly-schedule-cell.pending:hover {
+            background-color: #958e17ff; /* Warna hover yang lebih cerah */
+        }
+        
+/* Styling untuk Modal Booking */
 .modal-booking {
-    z-index: 1050; /* Tingkatkan nilai z-index agar selalu di atas navbar (z-index: 1000) */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.85);
     display: none;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
 }
-        .modal-content-booking {
-            background-color: #2f343e;
-            color: #dbe0e9;
-            border-radius: 12px;
-            padding: 1.5rem; /* Padding dikurangi */
-            max-width: 400px; /* Ukuran kotak dikurangi */
-            width: 90%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            position: relative;
-            border-radius: 16px;
-            /* === KODE BARU UNTUK SCROLLING === */
-            max-height: 90vh; 
-            overflow-y: auto;  
-        }
 
-        .modal-content-booking h3 {
-            margin-top: 0;
-            color: #dbe0e9;
-            font-size: 1.5rem; /* Ukuran font judul dikurangi */
-            font-weight: bold;
-            margin-bottom: 0.5rem; /* Jarak bawah dikurangi */
-        }
+/* Konten di dalam Modal */
+.modal-content-booking {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    animation: fadeIn 0.3s ease-out;
+    border: 1px solid #333;
 
-        .modal-content-booking p {
-            font-size: 1rem; /* Ukuran font paragraf dikurangi */
-            color: #a7b0bf;
-            margin-bottom: 1rem; /* Jarak bawah dikurangi */
-        }
+    max-height: 90vh; /* Tentukan tinggi maksimal 90% dari viewport height */
+    overflow-y: auto;   /* Tambahkan scrollbar vertikal jika konten melebihi tinggi maksimal */
+}
 
-        .modal-content-booking button {
-            margin-top: 1rem;
-            padding: 0.6rem 1.2rem; /* Ukuran padding tombol dikurangi */
-            border: none;
-            background-color: #4a90e2;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+/* Animasi untuk modal */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-        .modal-content-booking button:hover {
-            background-color: #5d9ee5;
-        }
+/* Tombol Tutup */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s;
+}
 
-        .close-btn {
-            position: absolute;
-            top: 5px; /* Posisi diubah menjadi 5px dari atas */
-            right: 10px; /* Posisi diubah */
-            background-color: transparent !important;
-            border: none !important;
-            color: #dbe0e9;
-            font-size: 2rem; /* Ukuran tombol close diperbesar */
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
+.close-btn:hover {
+    color: #e0e0e0;
+}
 
-        .close-btn:hover {
-            color: #ffd600; /* Warna hover disesuaikan */
-        }
-        
-        /* CSS tambahan untuk memastikan tombol close-btn transparan */
-        .modal-content-booking .close-btn {
-            background-color: transparent !important;
-            border: none !important;
-            color: #dbe0e9;
-            font-size: 2rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
+/* Judul dan sub-judul */
+.modal-content-booking h3 {
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 2.2rem;
+    color: #ffffff;
+    font-weight: 700;
+}
 
-        /* New style for detail booking modal */
-        #detailBookingModal .modal-content-booking {
-            max-width: 300px;
-            text-align: center;
-            padding: 1.5rem;
-            border: 2px solid #ffd600;
-            animation: fadeInZoom 0.3s ease-out forwards;
-        }
-        #detailBookingModal h3 {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            border-bottom: 2px solid #ffd600;
-            padding-bottom: 0.5rem;
-            display: none;
-        }
-        #detailBookingModal #bookingDetails {
-            text-align: center;
-            margin-bottom: 1rem;
-            padding-top: 0.5rem;
-            font-family: 'Montserrat', sans-serif;
-        }
-        #detailBookingModal #bookingDetails .detail-item {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 0.6rem;
-            font-size: 0.9rem;
-            flex-direction: column;
-            line-height: 1.5;
-        }
-        #detailBookingModal #bookingDetails .detail-item strong {
-            color: #a7b0bf;
-            font-weight: 500;
-            font-size: 0.8rem;
-        }
-        #detailBookingModal #bookingDetails .detail-value {
-            font-weight: bold;
-            color: #ffd600;
-            font-size: 1.1rem;
-        }
-        #detailBookingModal .confirm-btn {
-            background-color: #1f3042ff;
-            width: 100%;
-            font-weight: 600;
-            border-radius: 6px;
-            padding: 0.6rem 1rem;
-        }
-        #detailBookingModal .confirm-btn:hover {
-            background-color: #48698cff;
-        }
+.modal-content-booking p {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #a0a0a0;
+    font-size: 1rem;
+}
 
-        /* Animasi untuk modal */
-        @keyframes fadeInZoom {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
+/* Container Form */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-        /* === FORM STYLE === */
-        .form-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            text-align: left;
-        }
+/* Grup Form untuk input berpasangan */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-        .form-container .form-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
+@media (min-width: 640px) {
+    .form-group {
+        flex-direction: row;
+    }
+}
 
-        .form-container label {
-            font-weight: bold;
-            color: #dbe0e9;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
+.form-group > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 
-        .form-container input,
-        .form-container textarea,
-        .form-container select {
-            padding: 0.8rem;
-            font-size: 1rem;
-            border: 1px solid #5a6473;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #353b48;
-            color: #fff;
-        }
+/* Label Input */
+.form-container label {
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
 
-        .form-container input:focus,
-        .form-container textarea:focus,
-        .form-container select:focus {
-            border-color: #ffd600;
-            outline: none;
-        }
+/* Input dan Textarea */
+.form-container input[type="text"],
+.form-container input[type="tel"],
+.form-container input[type="number"],
+.form-container textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
 
-        .form-container .button-group {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
+.form-container input:focus,
+.form-container textarea:focus {
+    border-color: #ffd600;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.2);
+}
 
-        .form-container button {
-            width: 100%;
-            padding: 0.8rem;
-            font-size: 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-weight: bold;
-        }
+/* Styling untuk input plus/minus */
+.input-plus-minus {
+    display: flex;
+    align-items: center;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
 
-        .form-container .cancel-btn {
-            background-color: #6c757d;
-            color: white;
-        }
+.input-plus-minus input {
+    border: none;
+    text-align: center;
+    background-color: transparent;
+    padding: 12px 0;
+}
 
-        .form-container .cancel-btn:hover {
-            background-color: #5a6268;
-        }
+.input-plus-minus button {
+    background-color: #ffd600;
+    color: #1a1a1a;
+    border: none;
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
 
-        .form-container .confirm-btn {
-            background-color: var(--usf-green);
-            color: white;
-        }
+.input-plus-minus button:hover {
+    background-color: #e6c000;
+}
 
-        .form-container .confirm-btn:hover {
-            background-color: #304055ff;;
-        }
+.input-plus-minus .btn-minus {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
 
+.input-plus-minus .btn-plus {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Tombol Aksi */
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    border: none;
+}
+
+.confirm-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.confirm-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-btn {
+    background-color: #555;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #444;
+}
+
+/* Perbaikan untuk tampilan modal konfirmasi akhir */
+.confirmation-confirm-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.confirmation-confirm-btn:hover {
+    background-color: #45a049;
+}
+
+.confirmation-cancel-btn {
+    background-color: #555;
+    color: white;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.confirmation-cancel-btn:hover {
+    background-color: #444;
+}
         /* Gaya yang sudah ada dari file Anda */
         .carousel {
             scroll-snap-type: x mandatory;
@@ -821,6 +918,57 @@ margin-right: 2px;
 height: 30px;
 }
 
+/* Event item styling */
+.fc-event {
+font-size: 12px;
+padding: 2px 4px;
+margin-bottom: 2px;
+white-space: normal;
+word-break: break-word;
+}
+
+/* Warna layanan custom */
+.fc-event-cuci-eksterior {
+background-color: #00ff88ff;
+border-color: #ffffffff;
+}
+
+/* Biru */
+.fc-event-cuci-interior {
+background-color: #f4ff2cff;
+border-color: #ffffffff;
+}
+
+/* Hijau */
+.fc-event-detailing {
+background-color: #d5beffff;
+border-color: #ffffffff;
+}
+
+/* Oranye */
+.fc-event-cuci-mobil {
+background-color: #ffffffff;
+border-color: #ffffffff;
+}
+
+/* Merah */
+.fc-event-salon-mobil-kaca {
+background-color: #ffb080ff;
+border-color: #ffffffff;
+}
+
+/* Ungu */
+.fc-event-perbaiki-mesin {
+background-color: #ffa6c2ff;
+border-color: #ffffffff;
+}
+
+/* Coklat */
+.fc-event-default {
+background-color: #ff7676ff;
+border-color: #ffffffff;
+}
+
 /* Abu-abu default jika tidak ada match */
 
 /* Hilangkan padding yang tidak perlu */
@@ -842,7 +990,7 @@ background-color: #c0db00 !important;
 border-color: #c0db00 !important;
 }
 .fc-daygrid-day.fc-day-today {
-background-color: rgba(0, 214, 200, 0.2) !important;
+background-color: rgba(179, 214, 0, 0.2) !important;
 }
 #calendar-container {
 border-radius: 10px;
@@ -856,7 +1004,7 @@ color: var(--usf-green);
 
 .hover-highlight li:hover,
 .hover-highlight p:hover {
-color: #b2daedff;
+color: var(--usf-green);
 cursor: pointer;
 }
 
@@ -866,46 +1014,30 @@ font-size: 1.75rem;
 
 /* === GAYA UNTUK HOME DAN NAVBAR === */
 
-/* GAYA NAVBAR UTAMA */
+/* Navbar */
 .header {
-    width: 100%;
-    padding: 10px 0;
-    z-index: 1000; /* Memastikan navbar selalu di atas konten lain */
-    transition: background-color 0.3s ease;
-}
-
-.fixed-navbar {
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #181a2eff; /* Warna hitam kebiruan */
-    color: white; /* Warna teks putih */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    z-index: 1000;
+    background-color: #0d1117; /* Warna latar belakang navbar tetap */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: none;
 }
 
-.fixed-navbar .nav-link {
-    color: white; /* Memastikan link berwarna putih */
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    max-width: 1200px;
+    margin: auto;
 }
 
-.fixed-navbar .logo img {
-    /* Atur gaya logo jika diperlukan */
-}
-
-/* Bagian ini untuk memastikan konten tidak tertutup oleh navbar */
-body {
-    padding-top: 70px; /* Sesuaikan dengan tinggi navbar Anda */
-}
-
-/* Gaya untuk link navbar */
-.nav-link {
-    color: #ffffffff; /* Warna default link, bisa Anda sesuaikan */
-    font-weight: bold;
-    padding: 10px 15px;
-    transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-    color: #ffc107; /* Warna saat di-hover */
+.logo img {
+    height: 50px;
+    filter: none; /* Logo tetap berwarna asli */
 }
 
 .navbar-menu .nav-links {
@@ -929,7 +1061,7 @@ body {
     position: absolute;
     width: 0;
     height: 2px;
-    background-color:white;
+    background-color: var(--usf-green);
     bottom: -5px;
     left: 0;
     transition: width 0.3s ease;
@@ -967,7 +1099,7 @@ body {
 }
 
 .hero-subtitle {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -985,7 +1117,7 @@ body {
 }
 
 .btn-book:hover {
-    background-color: #160377ff;
+    background-color: #55a858;
     transform: translateY(-2px);
 }
 
@@ -1112,7 +1244,7 @@ font-weight: bold;
 transition: background-color 0.3s ease;
 }
 .btn-primary-custom:hover {
-background-color: #557aa8ff;
+background-color: #55a858;
 }
  .swal2-popup {
             background-color: #2f343e !important;
@@ -1201,7 +1333,7 @@ background-color: #557aa8ff;
         }
 
         .confirmation-confirm-btn:hover {
-            background-color: #3b506cff;
+            background-color: #218838; /* Hijau lebih gelap */
         }
         
         /* CSS BARU UNTUK MODAL VIDEO */
@@ -1225,7 +1357,7 @@ background-color: #557aa8ff;
 /* === Gaya untuk Admin Edit Inline === */
 .admin-editable-text {
 <?php if ($is_admin_mode): ?>
-border: 2px dashed #007bffff;
+border: 2px dashed #007bff;
 padding: 5px;
 display: inline-block;
 cursor: pointer;
@@ -1255,29 +1387,9 @@ border-color: #ffc107;
 </style>
 </head>
 <body class="bg-black text-white <?php echo $is_admin_mode ? 'is-admin-mode' : ''; ?>">
-<header id="main-header" class="header fixed-navbar">
-    
-    <div class="header-inner">
-       <a href="#" class="logo">
-            <img src="logom.png" alt="Logo">
-        </a>
-        <nav class="navbar-menu">
-            <ul class="nav-links">
-                <li><a href="#" class="nav-link">Home</a></li>
-                <li><a href="#booking-section" class="nav-link">Book</a></li>
-                <li><a href="#gallery-section" class="nav-link">Gallery</a></li>
-                <li><a href="#map-section" class="nav-link">Contact</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
-
-<section 
-    id="home-section" 
-    class="hero-section <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-    data-key="home_bg_image"
-    style="background-image: url('<?php echo get_content('home_bg_image', 'bn1.png'); ?>');">
-    
+<section id="home-section" class="hero-section admin-editable-image"
+    style="background-image: url('<?php echo get_content('home_bg_image', 'CZX.jpg'); ?>');"
+    data-key="home_bg_image">
     <div class="hero-content-centered">
         <h1 class="hero-title <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
             <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
@@ -1291,30 +1403,26 @@ border-color: #ffc107;
         </p>
         <a href="#booking-section" class="btn btn-book">BOOKING SEKARANG</a>
     </div>
-
 </section>
-
-<input type="file" id="heroImageInput" class="hidden-file-input">
 <section id="booking-section" class="booking-section py-5" style="background-color: #ffffffff;">
     <div class="container-fluid">
         <div class="row justify-content-center" data-aos="fade-up">
             <div class="col-lg-12 col-md-12">
-              
-                    <h2 class="text-5xl font-bold text-center text-gray-800
-            <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-            data-aos="fade-down"
-            style="font-family: 'Poppins', sans-serif;"
-            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-            data-key="book_heading">
-            <?php echo get_content('book_heading', 'Booking Lapangan'); ?>
-        </h2><br><br>
+               
+                   <h2 class="text-5xl font-bold text-center text-gray-800
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+data-aos="fade-down"
+style="font-family: 'Montserrat', sans-serif;"
+<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+data-key="book_heading">
+<?php echo get_content('book_heading', 'Booking'); ?>
+</h2><br><br>
 
                     <div id="dailyScheduleContainer" style="max-width: 100%; flex-grow: 1;">
-                       
-                        <div class="fw-bold text-dark text-center" class="date-info" id="currentDateInfo" >Tanggal: 08 August 2025</div><br>
+                        
+                        <p class="date-info text-dark fw-bold" id="currentDateInfo">Tanggal: 08 August 2025</p>
                                             <div class="text-center d-flex flex-column items-center gap-2 mb-4">
-                        <div class="date-picker-container">
-                            <label for="date-input" class="fw-bold text-dark">Pilih Tanggal:</label>
+                        <div class="date-picker-container fw-bold">
                             <input type="date" id="date-input" value="<?php echo date('Y-m-d'); ?>">
                         </div>
                     </div>
@@ -1349,146 +1457,242 @@ border-color: #ffc107;
             </div>
         </div>
         <div class="modal-booking" id="detailBookingModal">
-            <div class="modal-content-booking">
-                <button class="close-btn" onclick="closeModal('detailBookingModal')">×</button>
-                <div id="bookingDetails">
-                    <div class="modal-icon">
-                        <i class="fas fa-info-circle text-[60px] text-[#4a90e2] mb-4"></i>
-                    </div>
-                    <h3 class="text-3xl font-bold mb-4">Detail Booking</h3>
-                    <div class="detail-item">
-                        <strong>Nama:</strong>
-                        <span id="detailNama" class="detail-value"></span>
-                    </div>
-                    <div class="detail-item">
-                        <strong>Waktu:</strong>
-                        <span id="detailWaktu" class="detail-value"></span>
-                    </div>
-                    <div class="detail-item">
-                        <strong>Tanggal:</strong>
-                        <span id="detailTanggal" class="detail-value"></span>
-                    </div>
-                </div>
-                <button class="confirm-btn" onclick="closeModal('detailBookingModal')">OK</button>
+    <div class="modal-content-booking">
+        <button class="close-btn" onclick="closeModal('detailBookingModal')">×</button>
+        <div id="bookingDetails">
+            <div class="modal-icon">
+                <i class="fas fa-info-circle text-[60px] text-[#4a90e2] mb-4"></i>
+            </div>
+            <h3 class="text-3xl font-bold mb-4 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="booking_detail_title">
+                <?php echo get_content('booking_detail_title', 'Detail Booking'); ?>
+            </h3>
+            <div class="detail-item">
+                <strong class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="booking_name_label_modal">
+                        <?php echo get_content('booking_name_label_modal', 'Nama:'); ?>
+                </strong>
+                <span id="detailNama" class="detail-value"></span>
+            </div>
+            <div class="detail-item">
+                <strong class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="booking_time_label_modal">
+                        <?php echo get_content('booking_time_label_modal', 'Waktu:'); ?>
+                </strong>
+                <span id="detailWaktu" class="detail-value"></span>
+            </div>
+            <div class="detail-item">
+                <strong class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="booking_date_label_modal">
+                        <?php echo get_content('booking_date_label_modal', 'Tanggal:'); ?>
+                </strong>
+                <span id="detailTanggal" class="detail-value"></span>
             </div>
         </div>
-        <div class="modal-booking" id="formModal">
-            <div class="modal-content-booking">
-                <button class="close-btn" onclick="closeModal('formModal')">×</button>
-                <h3>Detail Booking</h3>
-                <p>Isi data untuk konfirmasi pemesanan.</p>
-                <div id="bookingSummary" class="text-left mb-4 p-4 rounded-lg" style="background-color: #1c2531; display: none;">
-                    <h4 class="text-xl font-bold mb-2 text-[#ffd600]">Rincian Biaya</h4>
-                    <hr class="border-[#5a6473] mb-2" />
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[#a7b0bf]">Biaya Sewa</span>
-                        <span id="biayaSewa" class="text-white font-bold">Rp0</span>
-                    </div>
-                    <hr class="border-[#5a6473] my-2" />
-                    <div class="flex justify-between items-center">
-                        <span class="text-xl font-bold">Total Bayar</span>
-                        <span id="totalBayar" class="text-xl font-bold text-[#ffd600]">Rp0</span>
+        <button class="confirm-btn <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="booking_ok_button">
+                <?php echo get_content('booking_ok_button', 'OK'); ?>
+        </button>
+    </div>
+</div>
+
+<div class="modal-booking" id="formModal">
+    <div class="modal-content-booking">
+        <button class="close-btn" onclick="closeModal('formModal')">×</button>
+        <h3 class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            data-key="booking_form_title">
+            <?php echo get_content('booking_form_title', 'Detail Booking'); ?>
+        </h3>
+        <p class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+            data-key="booking_form_subtitle">
+            <?php echo get_content('booking_form_subtitle', 'Isi data untuk konfirmasi pemesanan.'); ?>
+        </p>
+        <div id="bookingSummary" class="text-left mb-4 p-4 rounded-lg" style="background-color: #1c2531; display: none;">
+            <h4 class="text-xl font-bold mb-2 text-[#ffd600] <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="booking_summary_title">
+                <?php echo get_content('booking_summary_title', 'Rincian Biaya'); ?>
+            </h4>
+            <hr class="border-[#5a6473] mb-2" />
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[#a7b0bf] <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                      <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                      data-key="booking_field_rent">
+                      <?php echo get_content('booking_field_rent', 'Biaya Sewa Lapangan'); ?>
+                </span>
+<span id="biayaSewaLapangan" 
+      class="text-white font-bold <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>" 
+      <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> 
+      data-key="field_rent_price">
+      <?php echo get_content('field_rent_price', 'Rp700.000'); ?>
+</span>
+            </div>
+            <div id="sewaTambahanSummary"></div>
+            <hr class="border-[#5a6473] my-2" />
+            <div class="flex justify-between items-center">
+                <span class="text-xl font-bold <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                      <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                      data-key="booking_total_title">
+                      <?php echo get_content('booking_total_title', 'Total Bayar'); ?>
+                </span>
+                <span id="totalBayar" class="text-xl font-bold text-[#ffd600]">Rp0</span>
+            </div>
+        </div>
+        <div class="form-container">
+            <div class="form-group">
+                <div>
+                    <label for="fullName" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                           <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                           data-key="booking_name_label">
+                           <?php echo get_content('booking_name_label', 'Nama :'); ?>
+                    </label>
+                    <input type="text" id="fullName" placeholder="Nama Lengkap" required />
+                </div>
+                <div>
+                    <label for="phone" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                           <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                           data-key="booking_phone_label">
+                           <?php echo get_content('booking_phone_label', 'Nomor :'); ?>
+                    </label>
+                    <input type="tel" id="phone" placeholder="Nomor Telepon" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="sewaSepatu">
+                        <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                              <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                              data-key="booking_shoes_label_text">
+                              <?php echo get_content('booking_shoes_label_text', 'Sewa Sepatu'); ?>
+                        </span>
+                        <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                              <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                              data-key="booking_shoes_price">
+                              <?php echo get_content('booking_shoes_price', 'Rp30.000'); ?>
+                        </span>/pasang:
+                    </label>
+                    <div class="input-plus-minus">
+                        <button type="button" class="btn-minus" data-item="sewaSepatu">-</button>
+                        <input type="number" id="sewaSepatu" class="sewa-item" data-price="30000" value="0" min="0" readonly />
+                        <button type="button" class="btn-plus" data-item="sewaSepatu">+</button>
                     </div>
                 </div>
-                <div class="form-container">
-                    <div class="form-group">
-                        <div>
-                            <label for="fullName">Nama :</label>
-                            <input type="text" id="fullName" placeholder="Nama Lengkap" required />
-                        </div>
-                        <div>
-                            <label for="phone">Nomor :</label>
-                            <input type="tel" id="phone" placeholder="Nomor Telepon" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div>
-                            <label for="numPlayers">Jumlah Pemain :</label>
-                            <input type="number" id="numPlayers" placeholder="Misal: 10" />
-                        </div>
-                        <div>
-                            <label for="teamName">Nama Tim :</label>
-                            <input type="text" id="teamName" placeholder="Nama Tim" />
-                        </div>
-                    </div>
-                    <div>
-                        <label for="notes">Catatan :</label>
-                        <textarea id="notes" rows="3" placeholder="Misal: Siapkan rompi"></textarea>
-                    </div>
-                    <div class="button-group">
-                        <button class="cancel-btn" onclick="closeModal('formModal')">Batal</button>
-                        <button class="confirm-btn" onclick="confirmBooking()">Booking Sekarang</button>
+                <div>
+                    <label for="sewaRompi">
+                        <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                              <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                              data-key="booking_vests_label_text">
+                              <?php echo get_content('booking_vests_label_text', 'Sewa Rompi'); ?>
+                        </span>
+                        <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                              <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                              data-key="booking_vests_price">
+                              <?php echo get_content('booking_vests_price', 'Rp20.000'); ?>
+                        </span>/biji:
+                    </label>
+                    <div class="input-plus-minus">
+                        <button type="button" class="btn-minus" data-item="sewaRompi">-</button>
+                        <input type="number" id="sewaRompi" class="sewa-item" data-price="20000" value="0" min="0" readonly />
+                        <button type="button" class="btn-plus" data-item="sewaRompi">+</button>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="modal-booking" id="finalConfirmationModal">
-            <div class="modal-content-booking max-w-lg">
-                <button class="close-btn" onclick="closeModal('finalConfirmationModal')">×</button>
-                <div class="modal-icon">
-                    <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
-                </div>
-                <h3 class="text-3xl font-bold mb-2">Pesanan Anda sudah benar?</h3>
-                <p class="text-lg text-gray-300 mb-4"> Pastikan data yang Anda isi sudah benar sebelum melanjutkan. </p>
-                <div id="finalBookingDetails" class="text-left bg-[#1c2531] p-4 rounded-lg mb-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-gray-400">Nama:</span>
-                        <span id="confirmNama" class="text-white font-bold"></span>
-                    </div>
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-gray-400">No. Telepon:</span>
-                        <span id="confirmPhone" class="text-white font-bold"></span>
-                    </div>
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-gray-400">Tanggal:</span>
-                        <span id="confirmDate" class="text-white font-bold"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Waktu:</span>
-                        <span id="confirmTime" class="text-white font-bold"></span>
-                    </div>
-                </div>
-                <div class="flex justify-center gap-4 mt-4">
-                    <button class="confirmation-cancel-btn" onclick="closeModal('finalConfirmationModal')">Batal</button>
-                    <button class="confirmation-confirm-btn" onclick="submitBooking()">Ya, Pesanan sudah benar</button>
+            <div class="form-group">
+                <div>
+                    <label for="notes" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                           <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                           data-key="booking_notes_label">
+                           <?php echo get_content('booking_notes_label', 'Catatan Tambahan:'); ?>
+                    </label>
+                    <textarea id="notes" rows="3" placeholder="Misal: Siapkan air mineral"></textarea>
                 </div>
             </div>
-        </div>
-        <div class="modal-booking" id="videoModal">
-            <div class="modal-content-booking p-0 rounded-xl" style="max-width: 800px; width: 95%;">
-                <div class="modal-header-video">
-                    <h3 class="text-3xl font-bold text-center">Tutorial Pemesanan</h3>
-                    <button class="close-btn text-white text-4xl leading-none" onclick="closeModal('videoModal')">×</button>
-                </div>
-                <video id="tutorialVideo" width="100%" height="auto" controls autoplay class="rounded-xl">
-                    <source src="vidio.mp4" type="video/mp4"> Browser Anda tidak mendukung tag video.
-                </video>
+            <div class="button-group">
+                <button class="cancel-btn <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="booking_cancel_button" onclick="closeModal('formModal')">
+                        <?php echo get_content('booking_cancel_button', 'Batal'); ?>
+                </button>
+                <button class="confirm-btn <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="booking_confirm_button" onclick="showFinalConfirmation()">
+                        <?php echo get_content('booking_confirm_button', 'Booking Sekarang'); ?>
+                </button>
             </div>
         </div>
     </div>
+</div>
+<div class="modal-booking" id="finalConfirmationModal">
+    <div class="modal-content-booking max-w-lg">
+        <button class="close-btn" onclick="closeModal('finalConfirmationModal')">×</button>
+        <div class="modal-icon">
+            <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+        </div>
+        <h3 class="text-3xl font-bold mb-2">Pesanan Anda sudah benar?</h3>
+        <p class="text-lg text-gray-300 mb-4">Pastikan data yang Anda isi sudah benar sebelum melanjutkan.</p>
+        <div id="finalBookingDetails" class="text-left bg-[#1c2531] p-4 rounded-lg mb-4">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-gray-400">Nama:</span>
+                <span id="confirmNama" class="text-white font-bold"></span>
+            </div>
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-gray-400">No. Telepon:</span>
+                <span id="confirmPhone" class="text-white font-bold"></span>
+            </div>
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-gray-400">Tanggal:</span>
+                <span id="confirmDate" class="text-white font-bold"></span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400">Waktu:</span>
+                <span id="confirmTime" class="text-white font-bold"></span>
+            </div>
+            <hr class="border-[#5a6473] my-2" />
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-gray-400">Biaya Sewa Lapangan:</span>
+                <span id="confirmBiayaSewaLapangan" class="text-white font-bold"></span>
+            </div>
+            <div id="confirmSewaTambahan" class="text-white"></div>
+            <hr class="border-[#5a6473] my-2" />
+            <div class="flex justify-between items-center">
+                <span class="text-xl font-bold">Total Bayar:</span>
+                <span id="confirmTotalBayar" class="text-xl font-bold text-[#ffd600]"></span>
+            </div>
+        </div>
+        <div class="flex justify-center gap-4 mt-4">
+            <button class="confirmation-cancel-btn" onclick="closeModal('finalConfirmationModal')">Batal</button>
+            <button class="confirmation-confirm-btn" onclick="submitBooking()">Ya, Pesanan sudah benar</button>
+        </div>
+    </div>
+</div>
 </section>
-<section class="about-section py-5">
+ <section class="about-section py-5">
     <div class="min-h-screen flex items-center px-6 py-12 relative" >
-        <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
-            <div class="text-white max-w-xl pl-4 md:pl-12">
-                <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold
-                    <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-                    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
-                    style="font-family: 'Poppins', sans-serif; color: #ffffffff;"
-                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-                    data-key="abou_head">
-                    <?php echo get_content('abou_head', 'MGD Soccer Field'); ?>
-                    <span class="text-white
-                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-                        data-key="about_heading1"
-                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-                        <?php echo get_content('about_heading1', 'Magelang'); ?>
-                    </span>
+   <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
+    <div class="text-white max-w-xl pl-4 md:pl-12">
+     <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold"
+    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
+    style="font-family: 'Saira', sans-serif;"
+    <?php echo $is_admin_mode ? 'contenteditable="true" class="admin-editable-text"' : ''; ?>
+    data-key="about_full_heading">
+    <span style="color: #5fa140ff;">
+        <?php echo get_content('ab_head', 'MGD Soccer Field'); ?>
+    </span>
+    <span class="text-white">
+        <?php echo get_content('about_heading1', 'Magelang'); ?>
+    </span>
 </h1>
 <p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000"
-style="font-family: 'Poppins', sans-serif;"
+style="font-family: 'Lexend Deca', sans-serif;"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="about_text1">
 <?php echo get_content('about_text1', 'MGD Soccer Field Magelang hadir sebagai wadah bagi setiap komunitas pecinta sepak bola yang ingin merasakan sensasi bermain dengan kualitas terbaik dan suasana menyenangkan.'); ?>
@@ -1497,7 +1701,7 @@ data-key="about_text1">
 <p class="text-[27px] leading-[36px] font-normal text-white text-shadow
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000"
-style="font-family: 'Poppins', sans-serif;"
+style="font-family: 'Lexend Deca', sans-serif;"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="about_text2">
 <?php echo get_content('about_text2', 'Kami yakin bahwa sepak bola bukan hanya tentang mencetak gol, tapi juga tentang menjaga kebersamaan, tawa, dan semangat sportifitas.'); ?>
@@ -1521,7 +1725,7 @@ data-key="about_image_path">
 <h2 class="text-5xl font-bold text-center text-gray-800
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 data-aos="fade-down"
-style="font-family: 'Poppins', sans-serif;"
+style="font-family: 'Montserrat', sans-serif;"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="gallery_heading">
 <?php echo get_content('gallery_heading', 'Galeri MGD Soccer Field'); ?>
@@ -1667,7 +1871,7 @@ data-key="location_address2"
 <h2 class="text-white text-5xl font-bold text-center
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 data-aos="fade-down"
-style="font-family: 'Poppins', sans-serif;"
+style="font-family: 'Montserrat', sans-serif;"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="program_heading">
 <?php echo get_content('program_heading', 'Program Spesial MGD'); ?>
@@ -1754,7 +1958,7 @@ src="<?php echo htmlspecialchars(get_content('footer_logo_path', 'logom.png')); 
 
 <div class="flex flex-col md:flex-row md:gap-24 text-lg text-center md:text-left">
 <div>
-<h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
+<h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="footer_title"
 class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
@@ -1768,7 +1972,7 @@ class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
 </ul>
 </div>
 <div>
-<h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
+<h3 class="text-[#5fa140ff] font-extrabold text-xl mb-4"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="footer_contact_title"
 class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
@@ -1808,13 +2012,13 @@ class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
        </div>
    </div>
 <div class="text-center text-gray-300 text-sm py-4 border-t border-gray-800 font-normal">
-<a class="text-[#7dbafbff] hover:underline text-white
+<a class="text-[#5fa140ff] hover:underline text-white
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 href="#"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
 data-key="footer_copyright">
 <?php echo htmlspecialchars(get_content('footer_copyright', '©2025 by')); ?>
-<a class="text-[#7dbafbff] hover:underline
+<a class="text-[#5fa140ff] hover:underline
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 href="#"
 <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
@@ -1828,31 +2032,37 @@ data-key="footer_copyright">
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
 AOS.init();
+let selectedDate = null;
+let selectedTime = null;
+let activeDay = "<?php echo date('Y-m-d'); ?>";
 
-// Inisialisasi Swiper
-// Inisialisasi Swiper
-var myGallerySwiper = new Swiper(".myGallerySwiper", {
-    loop: true,
-    spaceBetween: 30,
-    autoplay: {
-        delay: 4000,
-        disableOnInteraction: false,
-    },
-    pagination: {
-        el: ".swiper-pagination",
-        clickable: true,
-    },
-    navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
-    },
-});
+// =========================================================================
+// DOM Content Loaded Event Listener
+// =========================================================================
 
 document.addEventListener("DOMContentLoaded", function() {
-    AOS.init();
-});
+    console.log("DOM content loaded. Initializing scripts...");
 
-    let activeDay = "<?php echo date('Y-m-d'); ?>";
+    if (typeof AOS !== 'undefined') {
+        AOS.init();
+    }
+
+    const myGallerySwiper = new Swiper(".myGallerySwiper", {
+        loop: true,
+        spaceBetween: 30,
+        autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+    });
 
     const formModal = document.getElementById('formModal');
     const detailBookingModal = document.getElementById('detailBookingModal');
@@ -1862,316 +2072,612 @@ document.addEventListener("DOMContentLoaded", function() {
     const tutorialVideo = document.getElementById('tutorialVideo');
     const weeklyScheduleContainer = document.getElementById('weeklyScheduleContainer');
     const toggleWeeklyBtn = document.getElementById('toggleWeeklyBtn');
+    const dailyScheduleContainer = document.getElementById('dailyScheduleContainer'); 
+    const dateInput = document.getElementById('date-input');
+    const scheduleContainer = document.getElementById('schedule');
+    let isWeeklyVisible = false;
 
-    tutorialBtn.addEventListener('click', () => {
-        openModal('videoModal');
-    });
-
-    // Menambahkan event listener untuk tombol toggle jadwal mingguan
-    toggleWeeklyBtn.addEventListener('click', () => {
-        if (weeklyScheduleContainer.style.display === 'none') {
-            weeklyScheduleContainer.style.display = 'block';
-            toggleWeeklyBtn.textContent = 'Sembunyikan Jadwal Mingguan';
-            // Panggil fungsi untuk memuat jadwal mingguan saat ditampilkan
-            fetchWeeklyBookings(activeDay);
-        } else {
-            weeklyScheduleContainer.style.display = 'none';
-            toggleWeeklyBtn.textContent = 'Tampilkan Jadwal Mingguan';
-        }
-    });
-
-
-    // Fungsi untuk membuka modal
-    function openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-            if (modalId === 'videoModal' && tutorialVideo) {
-                tutorialVideo.play();
-            }
-        }
+    // Admin editable content functionality
+    const editableElements = document.querySelectorAll('.admin-editable-text');
+    if (editableElements) {
+        editableElements.forEach(element => {
+            element.addEventListener('blur', function() {
+                const key = this.dataset.key;
+                const value = this.textContent.trim();
+                saveContent(key, value);
+            });
+        });
     }
 
-    // Fungsi untuk menutup modal
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            if (modalId === 'videoModal' && tutorialVideo) {
-                tutorialVideo.pause();
-                tutorialVideo.currentTime = 0; // Mengatur ulang video ke awal
-            }
-        }
+    if (tutorialBtn) {
+        tutorialBtn.addEventListener('click', () => {
+            openModal('videoModal');
+        });
     }
 
-    function showBookingForm(time, date) {
-        // --- KODE BARU UNTUK KONFIRMASI DENGAN SWEETALERT2 ---
-        Swal.fire({
-            title: 'Yakin mau pesan?',
-            html: `Anda akan memesan lapangan pada tanggal <strong>${date}</strong> pukul <strong>${time}</strong>.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, pesan sekarang!',
-            cancelButtonText: 'Batal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Jika pengguna mengklik 'Ya', lanjutkan ke modal formulir booking
-                
-                // Tampilkan summary booking
-                const bookingSummary = document.getElementById('bookingSummary');
-                bookingSummary.style.display = 'block';
-                document.getElementById('biayaSewa').textContent = 'Rp700.000';
-                document.getElementById('totalBayar').textContent = 'Rp700.000';
-
-                openModal('formModal');
+    if (toggleWeeklyBtn && weeklyScheduleContainer) {
+        toggleWeeklyBtn.addEventListener('click', () => {
+            isWeeklyVisible = !isWeeklyVisible;
+            if (isWeeklyVisible) {
+                // Baris ini dihapus agar jadwal harian tetap terlihat
+                // dailyScheduleContainer.style.display = 'none'; 
+                weeklyScheduleContainer.style.display = 'block';
+                toggleWeeklyBtn.textContent = 'Sembunyikan Jadwal Mingguan';
+                fetchWeeklyBookings(activeDay);
+            } else {
+                weeklyScheduleContainer.style.display = 'none';
+                // Baris ini juga tidak diperlukan karena jadwal harian tidak disembunyikan
+                // dailyScheduleContainer.style.display = 'block'; 
+                toggleWeeklyBtn.textContent = 'Tampilkan Jadwal Mingguan';
+                fetchDailyBookings(activeDay);
             }
         });
     }
 
-    function confirmBooking() {
-        // Logika konfirmasi booking sebelum submit
-        const fullName = document.getElementById('fullName').value;
-        const phone = document.getElementById('phone').value;
-
-        if (fullName === "" || phone === "") {
-            Swal.fire({
-                icon: 'error',
-                title: 'Opps...',
-                text: 'Nama dan Nomor Telepon harus diisi!'
-            });
-            return;
-        }
-
-        // Tampilkan data di modal konfirmasi
-        document.getElementById('confirmNama').textContent = fullName;
-        document.getElementById('confirmPhone').textContent = phone;
-        document.getElementById('confirmDate').textContent = activeDay; // Menggunakan tanggal yang aktif
-        // Ambil jam yang dipilih dari slot yang terakhir diklik, contoh:
-        const selectedSlot = document.querySelector('.slot.selected');
-        if (selectedSlot) {
-             document.getElementById('confirmTime').textContent = selectedSlot.dataset.time;
-        } else {
-             document.getElementById('confirmTime').textContent = "Tidak ada waktu terpilih";
-        }
-       
-        closeModal('formModal');
-        openModal('finalConfirmationModal');
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            activeDay = this.value;
+            fetchDailyBookings(activeDay);
+            if (isWeeklyVisible) {
+                fetchWeeklyBookings(activeDay);
+            }
+        });
     }
 
-    function submitBooking() {
-        const nama = document.getElementById('fullName').value;
-        const no_hp = document.getElementById('phone').value;
-        const tanggal = activeDay; // Menggunakan tanggal yang aktif
-        const selectedSlot = document.querySelector('.slot.selected');
-        const jam = selectedSlot ? selectedSlot.dataset.time : '';
-        const jumlahPemain = document.getElementById('numPlayers').value;
-        const namaTim = document.getElementById('teamName').value;
-        const catatan = document.getElementById('notes').value;
+    if (scheduleContainer) {
+        scheduleContainer.addEventListener('click', function(event) {
+            const clickedButton = event.target.closest('.booking-button');
+            if (clickedButton && !clickedButton.disabled) {
+                const slotElement = event.target.closest('.slot');
+                if (slotElement) {
+                    const date = slotElement.dataset.date;
+                    const time = slotElement.dataset.time;
 
-        if (nama === "" || no_hp === "" || tanggal === "" || jam === "") {
+                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                    slotElement.classList.add('selected');
+
+                    showBookingForm(time, date);
+                }
+            }
+        });
+    }
+    
+    const plusMinusButtons = document.querySelectorAll('.btn-plus, .btn-minus');
+    if (plusMinusButtons) {
+        plusMinusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const item = this.dataset.item;
+                const input = document.getElementById(item);
+                let value = parseInt(input.value);
+                
+                if (this.classList.contains('btn-plus')) {
+                    value++;
+                } else if (this.classList.contains('btn-minus') && value > 0) {
+                    value--;
+                }
+                input.value = value;
+                updateTotalBooking();
+            });
+        });
+    }
+    
+    const priceElements = document.querySelectorAll('[data-key="field_rent_price"], [data-key="booking_shoes_price"], [data-key="booking_vests_price"]');
+    if (priceElements) {
+        priceElements.forEach(element => {
+            element.addEventListener('blur', function() {
+                updateTotalBooking();
+            });
+        });
+    }
+
+    fetchDailyBookings(activeDay);
+
+    // =========================================================================
+    // Polling Functionality
+    // =========================================================================
+    setInterval(() => {
+        if (isWeeklyVisible) {
+            fetchWeeklyBookings(activeDay);
+        } else {
+            fetchDailyBookings(activeDay);
+        }
+    }, 15000); // Polling setiap 15 detik
+
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.showBookingForm = showBookingForm;
+    window.showFinalConfirmation = showFinalConfirmation;
+    window.submitBooking = submitBooking;
+    window.showDetailBooking = showDetailBooking;
+    window.fetchDailyBookings = fetchDailyBookings;
+    window.fetchWeeklyBookings = fetchWeeklyBookings;
+});
+
+// =========================================================================
+// Utility & Modal Functions
+// =========================================================================
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        const tutorialVideo = document.getElementById('tutorialVideo');
+        if (modalId === 'videoModal' && tutorialVideo) {
+            tutorialVideo.play();
+        }
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        const tutorialVideo = document.getElementById('tutorialVideo');
+        if (modalId === 'videoModal' && tutorialVideo) {
+            tutorialVideo.pause();
+            tutorialVideo.currentTime = 0;
+        }
+    }
+}
+
+function getDayName(dateString) {
+    const date = new Date(dateString);
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    return dayNames[date.getDay()];
+}
+
+function showBookingForm(time, date) {
+    Swal.fire({
+        title: 'Yakin mau pesan?',
+        html: `Anda akan memesan lapangan pada tanggal <strong>${date}</strong> pukul <strong>${time}</strong>.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, pesan sekarang!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            selectedDate = date;
+            selectedTime = time;
+
+            document.getElementById('fullName').value = '';
+            document.getElementById('phone').value = '';
+            
+            document.querySelectorAll('.sewa-item').forEach(input => input.value = 0);
+            
+            updateTotalBooking();
+            document.getElementById('bookingSummary').style.display = 'block';
+
+            openModal('formModal');
+        }
+    });
+}
+
+function updateTotalBooking() {
+    const fieldPriceElement = document.querySelector('[data-key="field_rent_price"]');
+    let hargaSewaLapangan = 0;
+    if (fieldPriceElement) {
+        const fieldPriceText = fieldPriceElement.textContent.replace(/[^\d]/g, '');
+        hargaSewaLapangan = parseFloat(fieldPriceText) || 0;
+    }
+
+    let total = hargaSewaLapangan;
+    const sewaTambahanSummary = document.getElementById('sewaTambahanSummary');
+    if (sewaTambahanSummary) {
+        sewaTambahanSummary.innerHTML = '';
+    }
+    
+    document.querySelectorAll('.sewa-item').forEach(input => {
+        let itemPrice = 0;
+        let itemName;
+
+        if (input.id === 'sewaSepatu') {
+            const sepatuPriceElement = document.querySelector('[data-key="booking_shoes_price"]');
+            if (sepatuPriceElement) {
+                const sepatuPriceText = sepatuPriceElement.textContent.replace(/[^\d]/g, '');
+                itemPrice = parseFloat(sepatuPriceText) || 0;
+            }
+            const sepatuLabelElement = document.querySelector('[data-key="booking_shoes_label_text"]');
+            if (sepatuLabelElement) {
+                itemName = sepatuLabelElement.textContent;
+            }
+        } else if (input.id === 'sewaRompi') {
+            const rompiPriceElement = document.querySelector('[data-key="booking_vests_price"]');
+            if (rompiPriceElement) {
+                const rompiPriceText = rompiPriceElement.textContent.replace(/[^\d]/g, '');
+                itemPrice = parseFloat(rompiPriceText) || 0;
+            }
+            const rompiLabelElement = document.querySelector('[data-key="booking_vests_label_text"]');
+            if (rompiLabelElement) {
+                itemName = rompiLabelElement.textContent;
+            }
+        }
+        
+        const itemCount = parseInt(input.value);
+        const itemTotal = itemPrice * itemCount;
+        
+        if (itemCount > 0) {
+            if (itemName) {
+                sewaTambahanSummary.innerHTML += `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[#a7b0bf]">${itemName} (${itemCount}x)</span>
+                        <span class="text-white font-bold">Rp${formatRupiah(itemTotal)}</span>
+                    </div>
+                `;
+                total += itemTotal;
+            }
+        }
+    });
+
+    const biayaSewaElement = document.getElementById('biayaSewaLapangan');
+    if (biayaSewaElement) {
+        biayaSewaElement.textContent = 'Rp' + formatRupiah(hargaSewaLapangan);
+    }
+    const totalBayarElement = document.getElementById('totalBayar');
+    if (totalBayarElement) {
+        totalBayarElement.textContent = 'Rp' + formatRupiah(total);
+    }
+}
+
+function showFinalConfirmation() {
+    const fullName = document.getElementById('fullName').value;
+    const phone = document.getElementById('phone').value;
+
+    if (!fullName || !phone) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Opps...',
+            text: 'Nama dan Nomor Telepon harus diisi!'
+        });
+        return;
+    }
+    
+    const fieldPriceElement = document.querySelector('[data-key="field_rent_price"]');
+    let hargaSewaLapangan = 0;
+    if (fieldPriceElement) {
+        const fieldPriceText = fieldPriceElement.textContent.replace(/[^\d]/g, '');
+        hargaSewaLapangan = parseFloat(fieldPriceText) || 0;
+    }
+
+    document.getElementById('confirmNama').textContent = fullName;
+    document.getElementById('confirmPhone').textContent = phone;
+    document.getElementById('confirmDate').textContent = selectedDate;
+    document.getElementById('confirmTime').textContent = selectedTime;
+    
+    let total = hargaSewaLapangan;
+    document.getElementById('confirmBiayaSewaLapangan').textContent = 'Rp' + formatRupiah(hargaSewaLapangan);
+    const confirmSewaTambahan = document.getElementById('confirmSewaTambahan');
+    if (confirmSewaTambahan) {
+        confirmSewaTambahan.innerHTML = '';
+    }
+
+    document.querySelectorAll('.sewa-item').forEach(input => {
+        let itemPrice = 0;
+        let itemName;
+
+        if (input.id === 'sewaSepatu') {
+            const sepatuPriceElement = document.querySelector('[data-key="booking_shoes_price"]');
+            if (sepatuPriceElement) {
+                const sepatuPriceText = sepatuPriceElement.textContent.replace(/[^\d]/g, '');
+                itemPrice = parseFloat(sepatuPriceText) || 0;
+            }
+            const sepatuLabelElement = document.querySelector('[data-key="booking_shoes_label_text"]');
+            if (sepatuLabelElement) {
+                itemName = sepatuLabelElement.textContent;
+            }
+        } else if (input.id === 'sewaRompi') {
+            const rompiPriceElement = document.querySelector('[data-key="booking_vests_price"]');
+            if (rompiPriceElement) {
+                const rompiPriceText = rompiPriceElement.textContent.replace(/[^\d]/g, '');
+                itemPrice = parseFloat(rompiPriceText) || 0;
+            }
+            const rompiLabelElement = document.querySelector('[data-key="booking_vests_label_text"]');
+            if (rompiLabelElement) {
+                itemName = rompiLabelElement.textContent;
+            }
+        }
+        
+        const itemCount = parseInt(input.value);
+        const itemTotal = itemPrice * itemCount;
+        
+        if (itemCount > 0) {
+            if (itemName) {
+                confirmSewaTambahan.innerHTML += `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-400">${itemName} (${itemCount}x):</span>
+                        <span class="text-white font-bold">Rp${formatRupiah(itemTotal)}</span>
+                    </div>
+                `;
+                total += itemTotal;
+            }
+        }
+    });
+    
+    document.getElementById('confirmTotalBayar').textContent = 'Rp' + formatRupiah(total);
+    
+    closeModal('formModal');
+    openModal('finalConfirmationModal');
+}
+
+function submitBooking() {
+    const nama = document.getElementById('fullName').value;
+    const no_hp = document.getElementById('phone').value;
+    
+    if (!nama || !no_hp || !selectedDate || !selectedTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Silakan lengkapi semua data yang diperlukan.'
+        });
+        return;
+    }
+
+    const sewaItems = {};
+    document.querySelectorAll('.sewa-item').forEach(input => {
+        sewaItems[input.id] = parseInt(input.value);
+    });
+
+    fetch('index.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=submit_booking&nama=${encodeURIComponent(nama)}&no_hp=${encodeURIComponent(no_hp)}&tanggal=${encodeURIComponent(selectedDate)}&jam=${encodeURIComponent(selectedTime)}&sewa_items=${JSON.stringify(sewaItems)}`
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data.includes("Berhasil")) {
+            Swal.fire({
+                title: 'Booking Berhasil!',
+                html: 'Permintaan booking Anda telah berhasil dikirim. Silakan selesaikan pembayaran untuk mengkonfirmasi pesanan.',
+                icon: 'success',
+                showConfirmButton: true,
+                confirmButtonText: 'Lanjutkan ke Pembayaran',
+                allowOutsideClick: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'pembayaran.php';
+                }
+            });
+
+            closeModal('finalConfirmationModal');
+            fetchDailyBookings(activeDay);
+            const weeklyScheduleContainer = document.getElementById('weeklyScheduleContainer');
+            if (weeklyScheduleContainer && weeklyScheduleContainer.style.display !== 'none') {
+                fetchWeeklyBookings(activeDay);
+            }
+        } else {
             Swal.fire({
                 icon: 'error',
-                title: 'Gagal',
-                text: 'Silakan lengkapi semua data yang diperlukan.'
+                title: 'Booking Gagal',
+                text: data
             });
-            return;
         }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Terjadi kesalahan saat menghubungi server.'
+        });
+    });
+}
 
-        // Kirim data ke server
-        fetch('index.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `nama=${encodeURIComponent(nama)}&no_hp=${encodeURIComponent(no_hp)}&tanggal=${encodeURIComponent(tanggal)}&jam=${encodeURIComponent(jam)}&jumlah_pemain=${encodeURIComponent(jumlahPemain)}&nama_tim=${encodeURIComponent(namaTim)}&catatan=${encodeURIComponent(catatan)}`
+// =========================================================================
+// Booking Fetching Functions
+// =========================================================================
+
+function fetchDailyBookings(date) {
+    const scheduleContainer = document.getElementById('schedule');
+    const dateInfo = document.getElementById('currentDateInfo');
+    if (!scheduleContainer || !dateInfo) return;
+
+    dateInfo.textContent = `Tanggal: ${getDayName(date)}, ${new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'})}`;
+
+    scheduleContainer.innerHTML = `<div class="text-white text-center col-span-full">Sedang memuat...</div>`;
+
+    fetch(`index.php?get_daily_bookings=1&tanggal=${date}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Jaringan tidak responsif atau terjadi kesalahan server');
+            }
+            return response.json();
         })
-        .then(response => response.text())
         .then(data => {
-            if (data.includes("Berhasil")) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Booking Berhasil!',
-                    text: 'Booking Anda telah berhasil dikonfirmasi.'
-                });
-                closeModal('finalConfirmationModal');
-                fetchDailyBookings(activeDay); // Refresh jadwal harian
-                if(weeklyScheduleContainer.style.display !== 'none') {
-                    fetchWeeklyBookings(activeDay); // Refresh jadwal mingguan jika sedang ditampilkan
-                }
+            scheduleContainer.innerHTML = '';
+            const now = new Date();
+
+            const timeSlots = ['06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'];
+            
+            if (Object.keys(data).length === 0) {
+                 scheduleContainer.innerHTML = `<div class="text-white text-center col-span-full">Tidak ada jadwal yang tersedia.</div>`;
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Booking Gagal',
-                    text: data
+                timeSlots.forEach(time => {
+                    const bookingData = data[time];
+                    const status = bookingData ? bookingData.status : 'available';
+                    const slot = document.createElement('div');
+                    slot.dataset.time = time;
+                    slot.dataset.date = date;
+
+                    const slotDate = new Date(`${date}T${time}:00`);
+                    const isPast = slotDate < now;
+
+                    slot.classList.add('slot', 'p-4', 'bg-[#1e1e1e]', 'rounded-lg', 'flex', 'flex-col', 'justify-center', 'items-center', 'cursor-pointer', 'transition-all', 'duration-300', 'hover:bg-[#2a2a2a]');
+
+                    let slotStatusText = '';
+                    let buttonText = '';
+                    let isClickable = true;
+                    let buttonClass = 'bg-green-500';
+
+                    if (status && status.toLowerCase() === 'booked') {
+                        slot.classList.add('booked'); 
+                        slotStatusText = 'Sudah Dibooking';
+                        buttonText = 'Sudah Dibooking';
+                        isClickable = false;
+                        buttonClass = 'bg-red-500';
+                    } else if (status && status.toLowerCase() === 'menunggu') {
+                        slot.classList.add('pending'); 
+                        slotStatusText = 'Menunggu Pembayaran';
+                        buttonText = 'Menunggu Pembayaran';
+                        isClickable = false;
+                        buttonClass = 'bg-yellow-500';
+                    } else {
+                        slot.classList.add('available');
+                        slotStatusText = 'Tersedia';
+                        buttonText = 'Pesan Sekarang';
+                    }
+
+                    if (isPast && status.toLowerCase() === 'available') {
+                        slot.classList.add('past-time'); 
+                        slotStatusText = 'Waktu sudah lewat';
+                        buttonText = 'Waktu sudah lewat';
+                        isClickable = false;
+                        buttonClass = 'bg-gray-500';
+                    }
+                    
+                    const slotContent = `
+                        <div class="text-white text-lg font-bold mb-2">${time.substring(0, 5)} - ${new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})}</div>
+                        <div class="text-gray-400 text-sm mb-4">${slotStatusText}</div>
+                        <button class="booking-button text-white font-bold py-2 px-4 rounded-lg hover:brightness-90 transition-colors duration-300 ${buttonClass} ${isClickable ? '' : 'opacity-70 cursor-not-allowed'}" ${isClickable ? '' : 'disabled'}>
+                            ${buttonText}
+                        </button>
+                    `;
+
+                    slot.innerHTML = slotContent;
+                    scheduleContainer.appendChild(slot);
                 });
             }
         })
         .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Terjadi kesalahan saat menghubungi server.'
-            });
+            console.error('Error fetching daily bookings:', error);
+            scheduleContainer.innerHTML = `<div class="text-red-500 text-center col-span-full">Gagal mengambil data jadwal. Silakan coba lagi.</div>`;
         });
-    }
+}
 
-    document.getElementById('date-input').addEventListener('change', function() {
-        activeDay = this.value;
-        fetchDailyBookings(activeDay);
-        if(weeklyScheduleContainer.style.display !== 'none') {
-            fetchWeeklyBookings(activeDay);
-        }
+function fetchWeeklyBookings(date) {
+    const weeklyBody = document.getElementById('weekly-schedule-body');
+    if (!weeklyBody) return;
+    weeklyBody.innerHTML = ''; 
+
+    const startDate = new Date(date);
+    const day = startDate.getDay();
+    const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+    startDate.setDate(diff);
+
+    const timeSlots = ['06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'];
+    const weeklyDates = Array.from({length: 7}, (_, i) => {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        return d.toISOString().split('T')[0];
     });
 
-    function getDayName(dateString) {
-        const date = new Date(dateString);
-        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        return dayNames[date.getDay()];
-    }
-
-    function fetchDailyBookings(date) {
-        const scheduleContainer = document.getElementById('schedule');
-        const dateInfo = document.getElementById('currentDateInfo');
-        dateInfo.textContent = `Tanggal: ${getDayName(date)}, ${new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'})}`;
-        
-        fetch(`index.php?get_daily_bookings=1&tanggal=${date}`)
-        .then(response => response.json())
-        .then(data => {
-            scheduleContainer.innerHTML = '';
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-
-            for (const time in data) {
-                const isBooked = data[time].booked;
-                const slot = document.createElement('div');
-                slot.classList.add('slot');
-                slot.dataset.time = time;
-                
-                const slotDate = new Date(`${date}T${time}:00`);
-                const isPast = slotDate < now;
-                
-                if (isBooked) {
-                    slot.classList.add('booked');
-                }
-                if (isPast) {
-                    slot.classList.add('past-time');
-                }
-
-                const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
-
-                let slotContent = `
-                    <div class="slot-time flex-grow">${displayTime}</div>
-                    <div class="slot-info">
-                        <span class="slot-status-label">${isBooked ? 'Sudah Dibooking' : 'Tersedia'}</span>
-                    </div>
-                    <button class="slot-btn" onclick="${isBooked || isPast ? '' : `showBookingForm('${time}', '${date}')`}" ${isBooked || isPast ? 'disabled' : ''}>
-                        ${isBooked ? 'Sudah Dibooking' : (isPast ? 'Waktu sudah lewat' : 'Booking')}
-                    </button>
-                `;
-
-                slot.innerHTML = slotContent;
-                
-                if (!isBooked && !isPast) {
-                    slot.addEventListener('click', () => {
-                         document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                         slot.classList.add('selected');
-                         showBookingForm(time, date);
-                    });
-                }
-                
-                scheduleContainer.appendChild(slot);
+    fetch(`index.php?get_weekly_bookings=1&start_date=${weeklyDates[0]}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Jaringan tidak responsif atau terjadi kesalahan server');
             }
-        });
-    }
+            return response.json();
+        })
+        .then(data => {
+            const bookings = data || {};
 
-    function fetchWeeklyBookings(date) {
-        const weeklyBody = document.getElementById('weekly-schedule-body');
-        weeklyBody.innerHTML = '';
-        
-        // Perbaikan: Logika untuk mendapatkan tanggal Senin
-        const startDate = new Date(date);
-        const day = startDate.getDay();
-        const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-        startDate.setDate(diff);
-
-        const timeSlots = ['06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'];
-        const weeklyDates = Array.from({length: 7}, (_, i) => {
-            const d = new Date(startDate);
-            d.setDate(d.getDate() + i);
-            return d.toISOString().split('T')[0];
-        });
-
-        fetch(`index.php?get_weekly_bookings=1&start_date=${weeklyDates[0]}`)
-            .then(response => response.json())
-            .then(data => {
-                for (const time of timeSlots) {
-                    const row = document.createElement('div');
-                    row.classList.add('weekly-schedule-row');
-                    const timeCell = document.createElement('div');
-                    timeCell.classList.add('weekly-schedule-cell', 'time-label');
-                    
-                    // --- KODE BARU UNTUK MENAMPILKAN RENTANG WAKTU ---
-                    const slotDate = new Date(`1970-01-01T${time}:00`);
-                    const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
-                    timeCell.textContent = displayTime;
-                    // --- AKHIR KODE BARU ---
-                    
-                    row.appendChild(timeCell);
-                    
-                    for (let i = 1; i <= 7; i++) {
-                        const cell = document.createElement('div');
-                        cell.classList.add('weekly-schedule-cell');
-                        
-                        // Perbaikan: Menggunakan String(i) untuk mengakses kunci data
-                        const dayData = data[String(i)];
-                        if (dayData && dayData[time]) {
-                            cell.classList.add('booked');
-                            cell.textContent = 'Booked';
-                        } else {
-                            cell.textContent = '-';
-                        }
-                        row.appendChild(cell);
-                    }
-                    weeklyBody.appendChild(row);
+            const tableHeaders = document.querySelectorAll('.weekly-schedule-header .weekly-header-item:not(:first-child)');
+            weeklyDates.forEach((d, i) => {
+                const dateObj = new Date(d);
+                const dayName = getDayName(d);
+                const dayNumber = dateObj.getDate();
+                if (tableHeaders[i]) {
+                    tableHeaders[i].textContent = `${dayName.substring(0, 3)} (${dayNumber})`;
                 }
             });
-    }
 
-    function showDetailBooking(tanggal, jam, nama) {
-        document.getElementById('detailNama').textContent = nama;
-        document.getElementById('detailWaktu').textContent = jam;
-        document.getElementById('detailTanggal').textContent = tanggal;
-        openModal('detailBookingModal');
-    }
+            for (const time of timeSlots) {
+                const row = document.createElement('div');
+                row.classList.add('weekly-schedule-row');
+                
+                const timeCell = document.createElement('div');
+                timeCell.classList.add('weekly-schedule-cell', 'time-label');
+                
+                const slotDate = new Date(`1970-01-01T${time}:00`);
+                const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+                timeCell.textContent = displayTime;
+                row.appendChild(timeCell);
+                
+                for (let i = 0; i < 7; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('weekly-schedule-cell');
+                    
+                    const dayData = bookings[weeklyDates[i]];
+                    let bookingStatus = 'available';
 
-    // Panggil fungsi untuk pertama kali
-    fetchDailyBookings(activeDay);
-    
-</script>
-<script>
-   
+                    if (dayData && dayData[time] && dayData[time].status) {
+                        bookingStatus = dayData[time].status;
+                    }
 
-    // Carousel script
-    const slidesContainer = document.querySelector('.slides');
-    const slides = document.querySelectorAll('.slide');
-    let currentSlide = 0;
+                    const bookingDate = weeklyDates[i];
+                    const now = new Date();
+                    const isPast = new Date(`${bookingDate}T${time}:00`) < now;
+                    
+                    let cellContent = ''; 
+                    
+                    if (bookingStatus && bookingStatus.toLowerCase() === 'booked') {
+                        cellContent = `Booked`;
+                        cell.classList.add('booked');
+                    } else if (bookingStatus && bookingStatus.toLowerCase() === 'menunggu') {
+                        cellContent = `Menunggu`;
+                        cell.classList.add('pending');
+                    }
+                    
+                    if (isPast && bookingStatus && bookingStatus.toLowerCase() === 'available') {
+                        cellContent = 'Waktu sudah lewat';
+                        cell.classList.add('past');
+                    }
+                    
+                    cell.textContent = cellContent;
+                    row.appendChild(cell);
+                }
+                weeklyBody.appendChild(row);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching weekly bookings:', error);
+            weeklyBody.innerHTML = `<div class="text-red-500 text-center col-span-full">Gagal mengambil data jadwal mingguan. Silakan coba lagi.</div>`;
+        });
+}
 
-    function nextSlide() {
-        currentSlide = (currentSlide + 1) % slides.length;
-        updateCarousel();
-    }
+function showDetailBooking(tanggal, jam, nama) {
+    document.getElementById('detailNama').textContent = nama;
+    document.getElementById('detailWaktu').textContent = jam;
+    document.getElementById('detailTanggal').textContent = tanggal;
+    openModal('detailBookingModal');
+}
 
-    function updateCarousel() {
-        slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
-    }
+function formatRupiah(number) {
+    return new Intl.NumberFormat('id-ID').format(number);
+}
 
-    // Set interval for auto-play
-    setInterval(nextSlide, 5000);
+function saveContent(key, value) {
+    const formData = new FormData();
+    formData.append('action', 'save_content');
+    formData.append('key', key);
+    formData.append('value', value);
 
+    fetch('index.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data.includes("success")) {
+            console.log("Konten berhasil disimpan.");
+        } else {
+            console.error("Gagal menyimpan konten:", data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 </script>
 </body>
-
 </html>

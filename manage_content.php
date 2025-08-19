@@ -121,9 +121,9 @@ $GLOBALS['is_admin_mode'] = true;
         </div>
     </div>
     
-   <<script src="AdminLTE-3.1.0/plugins/jquery/jquery.min.js"></script>
-<script src="AdminLTE-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script>
+    <script src="AdminLTE-3.1.0/plugins/jquery/jquery.min.js"></script>
+    <script src="AdminLTE-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
     $(document).ready(function() {
         // --- Logika untuk Edit Teks ---
         $(document).on('blur', '.admin-editable-text', function() {
@@ -152,21 +152,20 @@ $GLOBALS['is_admin_mode'] = true;
             }
         });
 
-        // --- Logika untuk Edit Gambar Latar Belakang ---
+        // --- Logika untuk Edit Gambar ---
         $(document).on('click', '.admin-editable-image', function(e) {
-            e.preventDefault(); 
-            // Hindari klik pada teks di dalam elemen gambar
-            if ($(e.target).is('h1, p, a, button')) {
-                return;
-            }
-            $('#heroImageInput').trigger('click');
+            e.preventDefault();
+            // Temukan input file yang ada di dalam parent yang sama
+            var fileInput = $(this).siblings('.hidden-file-input');
+            fileInput.trigger('click');
         });
 
-        // Tangani perubahan file pada input file yang sudah ada
-        $('#heroImageInput').on('change', function() {
+        // Tangani perubahan file saat input file diubah
+        $(document).on('change', '.hidden-file-input', function() {
             var file = this.files[0];
-            var element = $('.admin-editable-image');
-            var key = element.data('key');
+            // Dapatkan elemen gambar yang terkait
+            var imgElement = $(this).siblings('.admin-editable-image');
+            var key = imgElement.data('key');
 
             if (file && key) {
                 var formData = new FormData();
@@ -182,8 +181,8 @@ $GLOBALS['is_admin_mode'] = true;
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            // Perbarui background-image dengan URL baru
-                            element.css('background-image', 'url("' + response.new_value + '")');
+                            // Perbarui atribut src pada tag <img> dengan URL baru
+                            imgElement.attr('src', response.new_value);
                             console.log('Konten ' + key + ' berhasil diperbarui.');
                         } else {
                             console.error('Gagal memperbarui ' + key + ': ' + response.message);
@@ -197,6 +196,6 @@ $GLOBALS['is_admin_mode'] = true;
             }
         });
     });
-</script>
+    </script>
 </body>
 </html>
