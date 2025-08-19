@@ -15,7 +15,7 @@ $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
 // Header kolom
-$headers = ['No.', 'Nama', 'No HP', 'Waktu']; // Sesuaikan dengan kolom Anda
+$headers = ['No.', 'Nama', 'No HP', 'Waktu', 'Status']; // Sesuaikan dengan kolom Anda
 $col = 'A';
 foreach ($headers as $header) {
     $sheet->setCellValue($col.'1', $header);
@@ -29,6 +29,7 @@ $sheet->setCellValue('A'.$row, $row - 1);
     $sheet->setCellValue('B'.$row, $data['nama']);
     $sheet->setCellValue('C'.$row, $data['no_hp']);
     $sheet->setCellValue('D'.$row, $data['waktu']);
+    $sheet->setCellValue('E'.$row, $data['status']);
     $row++;
 }
 

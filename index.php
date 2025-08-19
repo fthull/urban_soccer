@@ -1,4 +1,3 @@
-
 <?php
 // Koneksi ke database dan helper konten
 include "conn.php";
@@ -18,14 +17,17 @@ $site_content = getAllContent($conn);
  * @param string $default Nilai default jika kunci tidak ditemukan
  * @return string Nilai konten
  */
-function get_content($key, $default = '') {
-global $site_content;
-// htmlspecialchars() digunakan untuk mencegah XSS
-return isset($site_content[$key]) ? htmlspecialchars($site_content[$key]) : htmlspecialchars($default);
+function get_content($key, $default = '')
+{
+    global $site_content;
+    // htmlspecialchars() digunakan untuk mencegah XSS
+    return isset($site_content[$key]) ? htmlspecialchars($site_content[$key]) : htmlspecialchars($default);
 }
 
 // Logika untuk menambahkan booking baru
 date_default_timezone_set('Asia/Jakarta');
+$is_manage_content_page = strpos($_SERVER['REQUEST_URI'], 'manage_content') !== false;
+
 
 /**
  * Handle POST request untuk booking baru.
@@ -92,8 +94,18 @@ if (isset($_GET['get_daily_bookings']) && isset($_GET['tanggal'])) {
 
     // Daftar semua slot waktu
     $all_slots = [
-        '06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30',
-        '18:00', '19:30', '21:00', '22:30'
+        '06:00',
+        '07:30',
+        '09:00',
+        '10:30',
+        '12:00',
+        '13:30',
+        '15:00',
+        '16:30',
+        '18:00',
+        '19:30',
+        '21:00',
+        '22:30'
     ];
 
     // Ambil data booking dari database
@@ -198,67 +210,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['change'])) {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?php echo get_content('website_title', 'MGD Seccor Magelang'); ?></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo get_content('website_title', 'MGD Soccer Magelang'); ?></title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Saira&family=Lexend+Deca&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Saira&family=Lexend+Deca&display=swap" rel="stylesheet">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" />
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Y3IQOsa3niuvpqakr8NIT3EETRv0G6tFumi3detLTSYuXBc6XxbPEt9sOg6OcLgO" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 
-<style>
-:root {
---usf-green: #1c2531;
---primary-color: var(--usf-green);
---light-color: #fff;
-}
+    <style>
+        :root {
+            --usf-green: #1c2531;
+            --primary-color: var(--usf-green);
+            --light-color: #fff;
+        }
 
-/* Gaya yang sudah ada dari file Anda */
-.carousel {
-scroll-snap-type: x mandatory;
-overflow-x: auto;
-display: flex;
-scroll-behavior: smooth;
-}
+        /* Gaya yang sudah ada dari file Anda */
+        .carousel {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            display: flex;
+            scroll-behavior: smooth;
+        }
 
-.carousel-item {
-scroll-snap-align: start;
-flex: none;
-width: 100%;
-}
+        .carousel-item {
+            scroll-snap-align: start;
+            flex: none;
+            width: 100%;
+        }
 
-.carousel::-webkit-scrollbar {
-display: none;
-}
+        .carousel::-webkit-scrollbar {
+            display: none;
+        }
 
-/* Animasi muncul */
-@keyframes fadeInSlide {
-from {
-opacity: 0;
-transform: translateX(-30px);
-}
-to {
-opacity: 1;
-transform: translateX(0);
-}
-}
+        /* Animasi muncul */
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
 
-.fade-in-left {
-animation: fadeInSlide 1s ease-out forwards;
-}
-.header-booking {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .fade-in-left {
+            animation: fadeInSlide 1s ease-out forwards;
+        }
+
+        .header-booking {
             background-color: #ffffffff;
             color: #000000ff;
             text-align: center;
@@ -267,7 +284,8 @@ animation: fadeInSlide 1s ease-out forwards;
         }
 
         .header-booking h1 {
-            font-size: 1.5rem; /* Ukuran font diubah menjadi lebih kecil */
+            font-size: 1.5rem;
+            /* Ukuran font diubah menjadi lebih kecil */
             margin: 0;
             font-weight: 700;
             color: #161616ff;
@@ -336,22 +354,23 @@ animation: fadeInSlide 1s ease-out forwards;
             width: 200px;
         }
 
-/* Pastikan ini adalah kode untuk kontainer grid */
-/* Atur kontainer grid */
-/* Tambahkan ID #schedule untuk selektor yang lebih spesifik */
-.schedule-grid {
-    /* Mengaktifkan tata letak grid dan menimpa gaya flexbox yang mungkin ada */
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-   
-}
+        /* Pastikan ini adalah kode untuk kontainer grid */
+        /* Atur kontainer grid */
+        /* Tambahkan ID #schedule untuk selektor yang lebih spesifik */
+        .schedule-grid {
+            /* Mengaktifkan tata letak grid dan menimpa gaya flexbox yang mungkin ada */
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+
+        }
 
         @media (max-width: 1024px) {
             .schedule-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
         @media (max-width: 600px) {
             .schedule-grid {
                 grid-template-columns: 1fr;
@@ -368,7 +387,7 @@ animation: fadeInSlide 1s ease-out forwards;
             cursor: pointer;
             transition: 0.3s;
             position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -379,17 +398,20 @@ animation: fadeInSlide 1s ease-out forwards;
         }
 
         .slot-time {
-            font-size: 1.1rem; /* Ukuran font lebih kecil */
+            font-size: 1.1rem;
+            /* Ukuran font lebih kecil */
             margin-bottom: 0.5rem;
         }
 
         .slot-time.flex-grow {
-            flex-grow: 1; /* Biarkan waktu mengisi ruang */
+            flex-grow: 1;
+            /* Biarkan waktu mengisi ruang */
         }
 
 
         .slot-status-label {
-            font-size: 0.8rem; /* Ukuran font lebih kecil */
+            font-size: 0.8rem;
+            /* Ukuran font lebih kecil */
             color: #a7b0bf;
         }
 
@@ -400,7 +422,8 @@ animation: fadeInSlide 1s ease-out forwards;
         }
 
         .slot-info {
-            font-size: 0.9rem; /* Ukuran font lebih kecil */
+            font-size: 0.9rem;
+            /* Ukuran font lebih kecil */
             color: #fff;
             margin-bottom: 1rem;
         }
@@ -408,7 +431,8 @@ animation: fadeInSlide 1s ease-out forwards;
         .slot-btn {
             display: block;
             width: 100%;
-            padding: 0.5rem 0.8rem; /* Mengubah ukuran padding */
+            padding: 0.5rem 0.8rem;
+            /* Mengubah ukuran padding */
             background-color: #283fa7ff;
             color: white;
             border: none;
@@ -422,17 +446,21 @@ animation: fadeInSlide 1s ease-out forwards;
             background-color: #dc3545;
             cursor: not-allowed;
         }
-        
+
         .slot.past-time .slot-btn {
             background-color: #6c757d;
             cursor: not-allowed;
         }
 
-       .weekly-schedule-container {
-    overflow: auto; /* Memungkinkan scrolling */
-    max-width: 1100px; /* Gunakan max-width agar lebih responsif */
-    margin: 0 auto; /* Ini yang membuat elemen menjadi di tengah */
-}
+        .weekly-schedule-container {
+            overflow: auto;
+            /* Memungkinkan scrolling */
+            max-width: 1100px;
+            /* Gunakan max-width agar lebih responsif */
+            margin: 0 auto;
+            /* Ini yang membuat elemen menjadi di tengah */
+        }
+
         .weekly-schedule-table {
             display: flex;
             flex-direction: column;
@@ -440,30 +468,39 @@ animation: fadeInSlide 1s ease-out forwards;
             border-radius: 12px;
             overflow: hidden;
             margin-top: 2rem;
-            min-width: 800px; /* Lebar minimum untuk memastikan scroll */
+            min-width: 800px;
+            /* Lebar minimum untuk memastikan scroll */
         }
+
         .weekly-schedule-header {
             display: grid;
-            grid-template-columns: 140px repeat(7, 1fr); /* 80px untuk kolom waktu */
+            grid-template-columns: 140px repeat(7, 1fr);
+            /* 80px untuk kolom waktu */
             background-color: #1c2531;
             padding: 1rem 0;
             font-weight: bold;
             color: #dbe0e9;
             text-align: center;
-            position: sticky; /* Membuat header lengket */
-            top: 0; /* Menempel di bagian atas saat scroll */
+            position: sticky;
+            /* Membuat header lengket */
+            top: 0;
+            /* Menempel di bagian atas saat scroll */
             z-index: 10;
         }
+
         .weekly-schedule-row {
             display: grid;
-            grid-template-columns: 140px repeat(7, 1fr); /* 80px untuk kolom waktu */
+            grid-template-columns: 140px repeat(7, 1fr);
+            /* 80px untuk kolom waktu */
             text-align: center;
             padding: 0.5rem 0;
             border-bottom: 1px solid #5a6473;
         }
+
         .weekly-schedule-row:last-child {
             border-bottom: none;
         }
+
         .weekly-schedule-cell {
             padding: 1rem 0.5rem;
             color: #a7b0bf;
@@ -471,74 +508,90 @@ animation: fadeInSlide 1s ease-out forwards;
             align-items: center;
             justify-content: center;
         }
+
         .weekly-schedule-cell.time-label {
             font-weight: bold;
             background-color: #353b48;
             color: #fff;
-            position: sticky; /* Membuat kolom waktu lengket */
-            left: 0; /* Menempel di bagian kiri saat scroll */
+            position: sticky;
+            /* Membuat kolom waktu lengket */
+            left: 0;
+            /* Menempel di bagian kiri saat scroll */
             z-index: 5;
         }
+
         .weekly-schedule-cell.booked {
-            background-color: var(--usf-green); /* Warna hijau gelap baru */
+            background-color: var(--usf-green);
+            /* Warna hijau gelap baru */
             color: #fff;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.2s;
         }
+
         .weekly-schedule-cell.booked:hover {
-            background-color: #35448cff; /* Warna hover yang lebih cerah */
+            background-color: #35448cff;
+            /* Warna hover yang lebih cerah */
         }
 
 
         /* Styles for the new modals from coba.php */
         /* === MODAL === */
-       /* --- Perbaikan Z-Index Modal --- */
-.modal-booking {
-    z-index: 1050; /* Tingkatkan nilai z-index agar selalu di atas navbar (z-index: 1000) */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
+        /* --- Perbaikan Z-Index Modal --- */
+        .modal-booking {
+            z-index: 1050;
+            /* Tingkatkan nilai z-index agar selalu di atas navbar (z-index: 1000) */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
         .modal-content-booking {
             background-color: #2f343e;
             color: #dbe0e9;
             border-radius: 12px;
-            padding: 1.5rem; /* Padding dikurangi */
-            max-width: 400px; /* Ukuran kotak dikurangi */
+            padding: 1.5rem;
+            /* Padding dikurangi */
+            max-width: 400px;
+            /* Ukuran kotak dikurangi */
             width: 90%;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             text-align: center;
             position: relative;
             border-radius: 16px;
             /* === KODE BARU UNTUK SCROLLING === */
-            max-height: 90vh; 
-            overflow-y: auto;  
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-content-booking h3 {
             margin-top: 0;
             color: #dbe0e9;
-            font-size: 1.5rem; /* Ukuran font judul dikurangi */
+            font-size: 1.5rem;
+            /* Ukuran font judul dikurangi */
             font-weight: bold;
-            margin-bottom: 0.5rem; /* Jarak bawah dikurangi */
+            margin-bottom: 0.5rem;
+            /* Jarak bawah dikurangi */
         }
 
         .modal-content-booking p {
-            font-size: 1rem; /* Ukuran font paragraf dikurangi */
+            font-size: 1rem;
+            /* Ukuran font paragraf dikurangi */
             color: #a7b0bf;
-            margin-bottom: 1rem; /* Jarak bawah dikurangi */
+            margin-bottom: 1rem;
+            /* Jarak bawah dikurangi */
         }
 
         .modal-content-booking button {
             margin-top: 1rem;
-            padding: 0.6rem 1.2rem; /* Ukuran padding tombol dikurangi */
+            padding: 0.6rem 1.2rem;
+            /* Ukuran padding tombol dikurangi */
             border: none;
             background-color: #4a90e2;
             color: white;
@@ -553,20 +606,24 @@ animation: fadeInSlide 1s ease-out forwards;
 
         .close-btn {
             position: absolute;
-            top: 5px; /* Posisi diubah menjadi 5px dari atas */
-            right: 10px; /* Posisi diubah */
+            top: 5px;
+            /* Posisi diubah menjadi 5px dari atas */
+            right: 10px;
+            /* Posisi diubah */
             background-color: transparent !important;
             border: none !important;
             color: #dbe0e9;
-            font-size: 2rem; /* Ukuran tombol close diperbesar */
+            font-size: 2rem;
+            /* Ukuran tombol close diperbesar */
             cursor: pointer;
             transition: color 0.3s ease;
         }
 
         .close-btn:hover {
-            color: #ffd600; /* Warna hover disesuaikan */
+            color: #ffd600;
+            /* Warna hover disesuaikan */
         }
-        
+
         /* CSS tambahan untuk memastikan tombol close-btn transparan */
         .modal-content-booking .close-btn {
             background-color: transparent !important;
@@ -585,6 +642,7 @@ animation: fadeInSlide 1s ease-out forwards;
             border: 2px solid #ffd600;
             animation: fadeInZoom 0.3s ease-out forwards;
         }
+
         #detailBookingModal h3 {
             font-size: 1.2rem;
             font-weight: bold;
@@ -593,12 +651,14 @@ animation: fadeInSlide 1s ease-out forwards;
             padding-bottom: 0.5rem;
             display: none;
         }
+
         #detailBookingModal #bookingDetails {
             text-align: center;
             margin-bottom: 1rem;
             padding-top: 0.5rem;
             font-family: 'Montserrat', sans-serif;
         }
+
         #detailBookingModal #bookingDetails .detail-item {
             display: flex;
             justify-content: center;
@@ -607,16 +667,19 @@ animation: fadeInSlide 1s ease-out forwards;
             flex-direction: column;
             line-height: 1.5;
         }
+
         #detailBookingModal #bookingDetails .detail-item strong {
             color: #a7b0bf;
             font-weight: 500;
             font-size: 0.8rem;
         }
+
         #detailBookingModal #bookingDetails .detail-value {
             font-weight: bold;
             color: #ffd600;
             font-size: 1.1rem;
         }
+
         #detailBookingModal .confirm-btn {
             background-color: #1f3042ff;
             width: 100%;
@@ -624,6 +687,7 @@ animation: fadeInSlide 1s ease-out forwards;
             border-radius: 6px;
             padding: 0.6rem 1rem;
         }
+
         #detailBookingModal .confirm-btn:hover {
             background-color: #48698cff;
         }
@@ -634,6 +698,7 @@ animation: fadeInSlide 1s ease-out forwards;
                 opacity: 0;
                 transform: scale(0.8);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -714,7 +779,8 @@ animation: fadeInSlide 1s ease-out forwards;
         }
 
         .form-container .confirm-btn:hover {
-            background-color: #304055ff;;
+            background-color: #304055ff;
+            ;
         }
 
         /* Gaya yang sudah ada dari file Anda */
@@ -741,6 +807,7 @@ animation: fadeInSlide 1s ease-out forwards;
                 opacity: 0;
                 transform: translateX(-30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -751,24 +818,27 @@ animation: fadeInSlide 1s ease-out forwards;
             animation: fadeInSlide 1s ease-out forwards;
         }
 
-/* About Section Styles */
-body {
-font-family: "Poppins", sans-serif;
-}
-.background-image {
-position: absolute;
-inset: 0;
-width: 100%;
-height: 100%;
-object-fit: cover;
-z-index: -10;
-}
-.text-shadow {
-text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-}
+        /* About Section Styles */
+        body {
+            font-family: "Poppins", sans-serif;
+        }
 
-/* Gaya tambahan untuk Swiper.js */
-        .swiper-button-next, .swiper-button-prev {
+        .background-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -10;
+        }
+
+        .text-shadow {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Gaya tambahan untuk Swiper.js */
+        .swiper-button-next,
+        .swiper-button-prev {
             color: var(--primary-color) !important;
             background-color: var(--light-color) !important;
             border-radius: 50%;
@@ -777,344 +847,758 @@ text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
 
-        .swiper-button-next:hover, .swiper-button-prev:hover {
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
             background-color: var(--primary-color) !important;
             color: var(--light-color) !important;
         }
 
-        .swiper-button-next::after, .swiper-button-prev::after {
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
             font-size: 18px !important;
             font-weight: bold;
         }
+
         .swiper-pagination-bullet {
             background: #ccc !important;
             opacity: 1 !important;
         }
+
         .swiper-pagination-bullet-active {
             background: var(--primary-color) !important;
         }
-.fc-toolbar-title {
-font-size: 1.5rem !important;
 
-}
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
 
-/* Set tinggi semua baris tanggal menjadi 120px */
-.fc-daygrid-day-frame {
-height: 120px !important;
-min-height: 120px !important;
-}
+        }
 
-/* Area events dengan scroll */
-.fc-daygrid-day-events {
-overflow-y: auto;
-max-height: calc(120px - 30px);
-/* 30px untuk header tanggal */
-margin-right: 2px;
-}
+        /* Set tinggi semua baris tanggal menjadi 120px */
+        .fc-daygrid-day-frame {
+            height: 120px !important;
+            min-height: 120px !important;
+        }
 
-/* Header tanggal */
-.fc-daygrid-day-top {
-height: 30px;
-}
+        /* Area events dengan scroll */
+        .fc-daygrid-day-events {
+            overflow-y: auto;
+            max-height: calc(120px - 30px);
+            /* 30px untuk header tanggal */
+            margin-right: 2px;
+        }
 
-/* Abu-abu default jika tidak ada match */
+        /* Header tanggal */
+        .fc-daygrid-day-top {
+            height: 30px;
+        }
 
-/* Hilangkan padding yang tidak perlu */
-.fc-daygrid-day {
-padding: 0 !important;
-}
+        /* Abu-abu default jika tidak ada match */
 
-/* Pastikan sel tanggal memiliki tinggi yang konsisten */
-.fc-daygrid-day {
-height: 120px !important;
-}
-.fc-button-primary {
-background-color: var(--usf-green) !important;
-border-color: var(--usf-green) !important;
-color: black !important;
-}
-.fc-button-primary:hover {
-background-color: #c0db00 !important;
-border-color: #c0db00 !important;
-}
-.fc-daygrid-day.fc-day-today {
-background-color: rgba(0, 214, 200, 0.2) !important;
-}
-#calendar-container {
-border-radius: 10px;
-box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
+        /* Hilangkan padding yang tidak perlu */
+        .fc-daygrid-day {
+            padding: 0 !important;
+        }
 
-/* Footer Styles */
-input:focus {
-color: var(--usf-green);
-}
+        /* Pastikan sel tanggal memiliki tinggi yang konsisten */
+        .fc-daygrid-day {
+            height: 120px !important;
+        }
 
-.hover-highlight li:hover,
-.hover-highlight p:hover {
-color: #b2daedff;
-cursor: pointer;
-}
+        .fc-button-primary {
+            background-color: var(--usf-green) !important;
+            border-color: var(--usf-green) !important;
+            color: black !important;
+        }
 
-.social-icon {
-font-size: 1.75rem;
-}
+        .fc-button-primary:hover {
+            background-color: #c0db00 !important;
+            border-color: #c0db00 !important;
+        }
 
-/* === GAYA UNTUK HOME DAN NAVBAR === */
+        .fc-daygrid-day.fc-day-today {
+            background-color: rgba(0, 214, 200, 0.2) !important;
+        }
 
-/* GAYA NAVBAR UTAMA */
-.header {
-    width: 100%;
-    padding: 10px 0;
-    z-index: 1000; /* Memastikan navbar selalu di atas konten lain */
-    transition: background-color 0.3s ease;
-}
+        #calendar-container {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
 
-.fixed-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: #181a2eff; /* Warna hitam kebiruan */
-    color: white; /* Warna teks putih */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
+        /* Footer Styles */
+        input:focus {
+            color: var(--usf-green);
+        }
 
-.fixed-navbar .nav-link {
-    color: white; /* Memastikan link berwarna putih */
-}
+        .hover-highlight li:hover,
+        .hover-highlight p:hover {
+            color: #b2daedff;
+            cursor: pointer;
+        }
 
-.fixed-navbar .logo img {
-    /* Atur gaya logo jika diperlukan */
-}
+        .social-icon {
+            font-size: 1.75rem;
+        }
 
-/* Bagian ini untuk memastikan konten tidak tertutup oleh navbar */
-body {
-    padding-top: 70px; /* Sesuaikan dengan tinggi navbar Anda */
+        /* === GAYA UNTUK HOME DAN NAVBAR === */
+
+        /* GAYA NAVBAR UTAMA */
+        .header {
+            width: 90%;
+            padding: 10px 0;
+            z-index: 1000;
+            /* Memastikan navbar selalu di atas konten lain */
+            transition: background-color 0.3s ease;
+        }
+
+ /* Navbar utama */
+.navbar-menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 20px;
+            background-color: #353b48;
 }
 
-/* Gaya untuk link navbar */
+/* Kontainer navigasi */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Aturan untuk logo */
+.nav img {
+  width: 100px; /* Ukuran default desktop */
+  height: auto;
+  transition: transform 0.3s ease; /* Efek halus saat hover */
+}
+
+/* Style link navigasi */
 .nav-link {
-    color: #ffffffff; /* Warna default link, bisa Anda sesuaikan */
-    font-weight: bold;
-    padding: 10px 15px;
-    transition: color 0.3s ease;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  border-radius: 4px;
 }
 
 .nav-link:hover {
-    color: #ffc107; /* Warna saat di-hover */
+  background-color: #e9ecef;
 }
 
-.navbar-menu .nav-links {
-    list-style: none;
-    display: flex;
-    margin: 0;
-    padding: 0;
-    gap: 2rem;
+.nav-link.active {
+  background-color: #0d6efd;
+  color: white;
 }
 
-.navbar-menu .nav-link {
-    font-weight: 600;
-    color: white; /* Warna teks navbar tetap putih */
-    position: relative;
-    transition: color 0.3s ease;
-    text-decoration: none;
+.nav-link.disabled {
+  color: #6c757d;
+  pointer-events: none;
 }
 
-.navbar-menu .nav-link::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    background-color:white;
-    bottom: -5px;
-    left: 0;
-    transition: width 0.3s ease;
-}
-
-.navbar-menu .nav-link:hover::after {
+/* Responsive untuk mobile */
+@media (max-width: 768px) {
+    
+  .navbar-menu {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+  
+  .nav {
     width: 100%;
-}
-
-/* Hero Section */
-.hero-section {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    background-size: cover;
-    background-position: center;
-    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: white;
+    gap: 0.75rem;
+  }
+  
+  .nav img {
+    width: 80px; /* Logo lebih kecil di mobile */
+    margin-bottom: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+  }
 }
 
-.hero-content-centered {
-    padding: 2rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+/* Tambahan untuk mode admin */
+.admin-editable-image {
+  cursor: pointer;
+  outline: 2px dashed #0d6efd;
 }
 
+.hidden-file-input {
+  display: none;
+}
+html {
+  overflow-x: hidden; /* Mencegah scroll horizontal */
+}
+
+        /* Base styles untuk hero section */
+.hero-section {
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+/* Responsive font sizes */
 .hero-title {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 4rem;
-    margin-bottom: 1rem;
+  font-size: 4rem; /* Ukuran default desktop */
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .btn-book {
-    background-color: var(--usf-green);
-    color: white;
-    border: none;
-    padding: 0.75rem 2.5rem;
-    border-radius: 50px;
-    font-size: 1.25rem;
-    font-weight: bold;
-    text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 1.2rem;
+  padding: 0.8rem 2rem;
 }
 
-.btn-book:hover {
-    background-color: #160377ff;
-    transform: translateY(-2px);
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem; /* 37.5% lebih kecil dari desktop */
+    line-height: 1.1;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem; /* 27% lebih kecil dari desktop */
+  }
+  
+  .btn-book {
+    font-size: 1rem;
+    padding: 0.6rem 1.5rem;
+  }
 }
 
-
-/* Gaya tambahan untuk Swiper.js */
-.swiper-button-next, .swiper-button-prev {
-color: var(--primary-color) !important;
-background-color: var(--light-color) !important;
-border-radius: 50%;
-width: 44px !important;
-height: 44px !important;
-display: flex;
-justify-content: center;
-align-items: center;
-box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-transition: all 0.3s ease;
+/* Extra small devices (phones, 576px and down) */
+@media (max-width: 576px) {
+  .hero-title {
+    font-size: 2rem; /* 50% lebih kecil dari desktop */
+    margin-bottom: 0.8rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .btn-book {
+    font-size: 0.9rem;
+  }
 }
 
-.swiper-button-next:hover, .swiper-button-prev:hover {
-background-color: var(--primary-color) !important;
-color: var(--light-color) !important;
-}
-
-.swiper-button-next::after, .swiper-button-prev::after {
-font-size: 18px !important;
-font-weight: bold;
-}
-.swiper-pagination-bullet {
-background: #ccc !important;
-opacity: 1 !important;
-}
-.swiper-pagination-bullet-active {
-background: var(--primary-color) !important;
-}
-
-/* CSS BARU UNTUK GALERI */
-.myGallerySwiper {
-max-width: 1000px;
-margin: 0 auto;
-position: relative;
-padding-bottom: 40px;
-}
-
-.myGallerySwiper .swiper-slide {
-display: flex;
-justify-content: center;
-align-items: center;
-padding: 0;
-box-sizing: border-box;
-}
-
-.myGallerySwiper .grid {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-grid-template-rows: repeat(2, 1fr);
-gap: 16px;
-height: 100%;
-}
-
-.myGallerySwiper .grid img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-aspect-ratio: 16 / 9;
-border-radius: 12px;
-box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-transition: transform 0.5s ease, box-shadow 0.5s ease;
-}
-
-.myGallerySwiper .grid img:hover {
-transform: scale(1.03);
-box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-}
-
-/* Modal Styles */
-.modal {
-display: none;
-position: fixed;
-z-index: 1000;
-left: 0;
-top: 0;
-width: 100%;
-height: 100%;
-overflow: auto;
-background-color: rgba(0,0,0,0.4);
-justify-content: center;
-align-items: center;
-}
-
-.modal-content {
-background-color: #fff;
-padding: 20px;
-border: 1px solid #888;
-width: 90%;
-max-width: 500px;
-border-radius: 8px;
-position: relative;
+/* Penyesuaian untuk mode admin */
+.admin-editable-text {
+  min-height: 1em;
+  outline: none;
 }
 
 @media (max-width: 768px) {
-.fc-daygrid-day-frame {
-height: 80px !important;
-min-height: 80px !important;
+  .admin-editable-text {
+    min-height: 1.2em; /* Lebih mudah diklik di mobile */
+  }
 }
-.fc-daygrid-day-events {
-max-height: calc(80px - 20px);
-}
-.fc-toolbar-title {
-font-size: 1.2rem !important;
-}
-.fc-event {
-font-size: 10px; /* Ukuran font diperkecil untuk event */
-padding: 1px 2px;
-}
+        /* Gaya tambahan untuk Swiper.js */
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: var(--primary-color) !important;
+            background-color: var(--light-color) !important;
+            border-radius: 50%;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            background-color: var(--primary-color) !important;
+            color: var(--light-color) !important;
+        }
+
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 18px !important;
+            font-weight: bold;
+        }
+
+        .swiper-pagination-bullet {
+            background: #ccc !important;
+            opacity: 1 !important;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: var(--primary-color) !important;
+        }
+
+        /* CSS BARU UNTUK GALERI */
+        .myGallerySwiper {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        .myGallerySwiper .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .myGallerySwiper .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            height: 100%;
+        }
+
+        .myGallerySwiper .grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .myGallerySwiper .grid img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ensure horizontal layout */
+        .grid.grid-cols-4 {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            /* Fixed height for consistency */
+            object-fit: cover;
+        }
+
+
+        /* Base styles untuk section */
+.bg-gradient-to-r {
+  padding: 2rem 1rem !important; /* Padding lebih kecil di mobile */
 }
 
+/* Responsive text scaling */
+.text-lg {
+  font-size: 1rem; /* Default 1.125rem */
+}
+
+.text-2xl {
+  font-size: 1.25rem; /* Default 1.5rem */
+}
+
+.text-5xl {
+  font-size: 2rem; /* Default 3rem */
+}
+
+/* Responsive layout untuk fitur list */
+@media (max-width: 768px) {
+  
+  .border-r {
+    border-right: none !important;
+    border-bottom: 1px solid #4b5563;
+    padding: 0 0 1.5rem 0 !important;
+    margin-bottom: 1.5rem;
+  }
+  
+  .px-12 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .w-full.md\:w-1\/3 {
+    width: 100% !important;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Text overlay lebih kecil */
+  .absolute.bottom-0 {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Penyesuaian khusus untuk teks yang editable di mobile */
+.admin-editable-text {
+  min-height: 1em; /* Pastikan tetap bisa diklik */
+}
+
+/* Icon location lebih kecil */
+.fa-map-marker-alt {
+  font-size: 2rem !important;
+}
+
+/* Padding heading program */
+.px-8 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.my-6 {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Base Footer Styles */
+footer {
+  padding-top: 2rem;
+  padding-bottom: 0;
+}
+
+/* Container Responsive */
+.max-w-7xl {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Layout Adjustments for Mobile */
+@media (max-width: 768px) {
+  .flex-col.md\:flex-row {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+  }
+  
+  .md\:gap-24 {
+    gap: 2rem;
+  }
+  
+  .md\:justify-center {
+    justify-content: center;
+  }
+  
+  .text-center.md\:text-left {
+    text-align: center !important;
+  }
+}
+
+/* Logo Responsive */
+.h-40 {
+  height: 30vw !important;
+  max-height: 120px;
+  min-height: 80px;
+  margin-bottom: 1rem !important;
+}
+
+/* Text Sizing for Mobile */
+@media (max-width: 768px) {
+  .text-lg {
+    font-size: 0.9rem;
+  }
+  
+  .text-xl {
+    font-size: 1.1rem;
+  }
+  
+  address p, 
+  .hover-highlight li {
+    font-size: 0.9rem;
+  }
+}
+
+/* Columns Layout */
+@media (max-width: 768px) {
+  .md\:flex-row {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .max-w-md {
+    max-width: 100% !important;
+  }
+}
+
+/* Social Icons */
+.social-icon {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .flex.space-x-6 {
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+}
+
+/* Copyright Section */
+.py-4 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  font-size: 0.8rem;
+}
+
+/* Hover Effects (Desktop only) */
+@media (hover: hover) {
+  .hover-highlight li:hover,
+  .social-icon:hover {
+    color: #5fa140;
+    cursor: pointer;
+  }
+}
+
+/* Admin Mode Adjustments */
+.admin-editable-image {
+  min-width: 100px;
+}
+
+@media (max-width: 768px) {
+  .admin-editable-text {
+    min-height: 1.2em; /* Better touch target */
+  }
+}
+
+/* Base Booking Section Styles */
+.booking-section {
+  padding: 2rem 0;
+}
+
+/* Responsive Font Sizes */
+.text-5xl {
+  font-size: 3rem; /* Desktop */
+}
+
+.text-3xl {
+  font-size: 1.75rem; /* Desktop */
+}
+
+.text-xl {
+  font-size: 1.25rem; /* Desktop */
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  /* Font Sizes */
+  .text-5xl {
+    font-size: 2rem; /* Smaller on mobile */
+  }
+  
+  .text-3xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-xl {
+    font-size: 1.1rem;
+  }
+  
+  /* Two-column layout for booking form */
+  .form-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  /* Adjust modal sizes */
+  .modal-content-booking {
+    width: 90%;
+    max-width: 100%;
+  }
+  
+  /* Schedule grid adjustments */
+  .schedule-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 columns */
+  }
+  
+  /* Weekly schedule adjustments */
+  .weekly-schedule-container {
+    overflow-x: auto;
+  }
+  
+  .weekly-schedule-table {
+    min-width: 700px;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 576px) {
+  .text-5xl {
+    font-size: 1.75rem;
+  }
+  
+  .form-group {
+    grid-template-columns: 1fr; /* Single column on very small screens */
+    gap: 0.5rem;
+  }
+  
+  /* Button adjustments */
+  .btn-primary-custom {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Modal content adjustments */
+  .modal-content-booking {
+    padding: 1rem;
+  }
+}
+
+/* Form Styling */
+.form-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group div {
+  margin-bottom: 0.5rem;
+}
+
+/* Button Styling */
 .btn-primary-custom {
-background-color: var(--usf-green);
-color: white;
-padding: 10px 20px;
-border-radius: 8px;
-text-decoration: none;
-font-weight: bold;
-transition: background-color 0.3s ease;
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
 }
+
 .btn-primary-custom:hover {
-background-color: #557aa8ff;
+  background-color: #45a049;
 }
- .swal2-popup {
+
+/* Modal Responsiveness */
+@media (max-width: 768px) {
+  .modal-content-booking.max-w-lg {
+    width: 90%;
+  }
+  
+  #finalBookingDetails {
+    padding: 1rem;
+  }
+  
+  .confirmation-confirm-btn,
+  .confirmation-cancel-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Schedule Grid */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Default 4 columns */
+  gap: 0.5rem;
+  padding: 0 1rem;
+}
+
+@media (max-width: 992px) {
+  .schedule-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on tablet */
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-grid {
+    grid-template-columns: 1fr; /* 1 column on very small screens */
+  }
+}
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .fc-daygrid-day-frame {
+                height: 80px !important;
+                min-height: 80px !important;
+            }
+
+            .fc-daygrid-day-events {
+                max-height: calc(80px - 20px);
+            }
+
+            .fc-toolbar-title {
+                font-size: 1.2rem !important;
+            }
+
+            .fc-event {
+                font-size: 10px;
+                /* Ukuran font diperkecil untuk event */
+                padding: 1px 2px;
+            }
+        }
+
+        .btn-primary-custom {
+            background-color: var(--usf-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #557aa8ff;
+        }
+
+        .swal2-popup {
             background-color: #2f343e !important;
             color: #dbe0e9 !important;
             border-radius: 12px !important;
@@ -1176,10 +1660,11 @@ background-color: #557aa8ff;
         .swal2-close:hover {
             color: #ffd600 !important;
         }
-        
+
         /* Tambahan CSS untuk tombol Batal dan Pesan Sekarang di konfirmasi akhir */
         .confirmation-cancel-btn {
-            background-color: #dc3545; /* Merah */
+            background-color: #dc3545;
+            /* Merah */
             color: white;
             font-weight: bold;
             padding: 0.8rem 1.5rem;
@@ -1188,11 +1673,13 @@ background-color: #557aa8ff;
         }
 
         .confirmation-cancel-btn:hover {
-            background-color: #c82333; /* Merah lebih gelap */
+            background-color: #c82333;
+            /* Merah lebih gelap */
         }
 
         .confirmation-confirm-btn {
-            background-color: #28a745; /* Hijau */
+            background-color: #28a745;
+            /* Hijau */
             color: white;
             font-weight: bold;
             padding: 0.8rem 1.5rem;
@@ -1203,7 +1690,7 @@ background-color: #557aa8ff;
         .confirmation-confirm-btn:hover {
             background-color: #3b506cff;
         }
-        
+
         /* CSS BARU UNTUK MODAL VIDEO */
         .modal-header-video {
             display: flex;
@@ -1222,106 +1709,119 @@ background-color: #557aa8ff;
             position: static;
             font-size: 2rem;
         }
-/* === Gaya untuk Admin Edit Inline === */
-.admin-editable-text {
-<?php if ($is_admin_mode): ?>
-border: 2px dashed #007bffff;
-padding: 5px;
-display: inline-block;
-cursor: pointer;
-<?php endif; ?>
-}
-.admin-editable-text:hover {
-<?php if ($is_admin_mode): ?>
-cursor: pointer;
-border-color: #ffc107;
-<?php endif; ?>
-}
-.admin-editable-image {
-<?php if ($is_admin_mode): ?>
-border: 2px dashed #007bff;
-padding: 5px;
-display: inline-block;
-cursor: pointer;
-<?php endif; ?>
-}
-.admin-editable-image:hover {
-<?php if ($is_admin_mode): ?>
-cursor: pointer;
-border-color: #ffc107;
-<?php endif; ?>
-}
-.hidden-file-input { display: none; }
-</style>
+
+        /* === Gaya untuk Admin Edit Inline === */
+        .admin-editable-text {
+            <?php if ($is_admin_mode): ?>border: 2px dashed #007bffff;
+            padding: 5px;
+            display: inline-block;
+            cursor: pointer;
+            <?php endif; ?>
+        }
+
+        .admin-editable-text:hover {
+            <?php if ($is_admin_mode): ?>cursor: pointer;
+            border-color: #ffc107;
+            <?php endif; ?>
+        }
+
+        .admin-editable-image {
+            <?php if ($is_admin_mode): ?>border: 2px dashed #007bff;
+            padding: 5px;
+            display: inline-block;
+            cursor: pointer;
+            <?php endif; ?>
+        }
+
+        .admin-editable-image:hover {
+            <?php if ($is_admin_mode): ?>cursor: pointer;
+            border-color: #ffc107;
+            <?php endif; ?>
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+    </style>
 </head>
+
 <body class="bg-black text-white <?php echo $is_admin_mode ? 'is-admin-mode' : ''; ?>">
-<header id="main-header" class="header fixed-navbar">
-    
-    <div class="header-inner">
-       <a href="#" class="logo">
-            <img src="logom.png" alt="Logo">
-        </a>
-        <nav class="navbar-menu">
-            <ul class="nav-links">
-                <li><a href="#" class="nav-link">Home</a></li>
-                <li><a href="#booking-section" class="nav-link">Book</a></li>
-                <li><a href="#gallery-section" class="nav-link">Gallery</a></li>
-                <li><a href="#map-section" class="nav-link">Contact</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
+    <header id="main-header" class="header fixed-navbar">
 
-<section 
-    id="home-section" 
-    class="hero-section <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-    data-key="home_bg_image"
-    style="background-image: url('<?php echo get_content('home_bg_image', 'bn1.png'); ?>');">
-    
-    <div class="hero-content-centered">
-        <h1 class="hero-title <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-            data-key="home_title">
-            <?php echo get_content('home_title', 'MGD SECCOR MAGELANG'); ?>
-        </h1>
-        <p class="hero-subtitle <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-            data-key="home_subtitle">
-            <?php echo get_content('home_subtitle', 'Play the game you love'); ?>
-        </p>
-        <a href="#booking-section" class="btn btn-book">BOOKING SEKARANG</a>
-    </div>
+        <div class="header-inner">
+            <nav class="navbar-menu">
+                <nav class="nav">
+            <img src="<?php echo get_content('logo_image', 'logom.png'); ?>" alt="Soccer image" class="w-full max-w-[100px]
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                data-key="logo_image">
+            <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
 
-</section>
+  <a class="nav-link" href="#">Beranda</a>
+  <a class="nav-link" href="#booking-section">Pesan</a>
+  <a class="nav-link" href="#gallery-section">Galeri</a>
+  <a class="nav-link" href="#map-section">Kontak</a>
+</nav>
+                <!-- <ul class="nav-links">
+                    <li><a href="#" class="nav-link">Beranda</a></li>
+                    <li><a href="#booking-section" class="nav-link">Pesan</a></li>
+                    <li><a href="#gallery-section" class="nav-link">Galeri</a></li>
+                    <li><a href="#map-section" class="nav-link">Kontak</a></li>
+                </ul> -->
+            </nav>
+        </div>
+    </header>
 
-<input type="file" id="heroImageInput" class="hidden-file-input">
-<section id="booking-section" class="booking-section py-5" style="background-color: #ffffffff;">
-    <div class="container-fluid">
-        <div class="row justify-content-center" data-aos="fade-up">
-            <div class="col-lg-12 col-md-12">
-              
+    <section
+
+        id="home-section"
+        class="hero-section <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+        data-key="home_bg_image"
+        style="background-image: url('<?php echo get_content('home_bg_image', 'bn1.png'); ?>');">
+
+        <div class="hero-content-centered">
+            <h1 class="hero-title <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="home_title">
+                <?php echo get_content('home_title', 'MGD SECCOR MAGELANG'); ?>
+            </h1>
+            <p class="hero-subtitle <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="home_subtitle">
+                <?php echo get_content('home_subtitle', 'Play the game you love'); ?>
+            </p>
+            <a href="#booking-section" class="btn btn-book">BOOKING SEKARANG</a>
+        </div>
+
+    </section>
+
+    <input type="file" id="heroImageInput" class="hidden-file-input">
+    <section id="booking-section" class="booking-section py-5" style="background-color: #ffffffff;">
+        <div class="container-fluid">
+            <div class="row justify-content-center" data-aos="fade-up">
+                <div class="col-lg-12 col-md-12">
+
                     <h2 class="text-5xl font-bold text-center text-gray-800
             <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-            data-aos="fade-down"
-            style="font-family: 'Poppins', sans-serif;"
-            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-            data-key="book_heading">
-            <?php echo get_content('book_heading', 'Booking Lapangan'); ?>
-        </h2><br><br>
+                        data-aos="fade-down"
+                        style="font-family: 'Poppins', sans-serif;"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="book_heading">
+                        <?php echo get_content('book_heading', 'Booking Lapangan'); ?>
+                    </h2><br><br>
 
                     <div id="dailyScheduleContainer" style="max-width: 100%; flex-grow: 1;">
-                       
-                        <div class="fw-bold text-dark text-center" class="date-info" id="currentDateInfo" >Tanggal: 08 August 2025</div><br>
-                                            <div class="text-center d-flex flex-column items-center gap-2 mb-4">
-                        <div class="date-picker-container">
-                            <label for="date-input" class="fw-bold text-dark">Pilih Tanggal:</label>
-                            <input type="date" id="date-input" value="<?php echo date('Y-m-d'); ?>">
+
+                        <div class="fw-bold text-dark text-center" class="date-info" id="currentDateInfo">Tanggal: 08 August 2025</div><br>
+                        <div class="text-center d-flex flex-column items-center gap-2 mb-4">
+                            <div class="date-picker-container">
+                                <label for="date-input" class="fw-bold text-dark">Pilih Tanggal:</label>
+                                <input type="date" id="date-input" value="<?php echo date('Y-m-d'); ?>">
+                            </div>
                         </div>
-                    </div>
                         <div class="schedule-grid" id="schedule"></div>
                     </div>
 
-                    
+
                     <div class="d-flex justify-content-center my-4 gap-2">
                         <button id="toggleWeeklyBtn" class="btn btn-primary-custom">Tampilkan Jadwal Mingguan</button>
                         <button id="toggleTutorialBtn" class="btn btn-primary-custom">Tutorial Pemesanan</button>
@@ -1465,713 +1965,780 @@ border-color: #ffc107;
                 </video>
             </div>
         </div>
-    </div>
-</section>
-<section class="about-section py-5">
-    <div class="min-h-screen flex items-center px-6 py-12 relative" >
-        <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
-            <div class="text-white max-w-xl pl-4 md:pl-12">
-                <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold
+        </div>
+    </section>
+    <section class="about-section py-5">
+        <div class="min-h-screen flex items-center px-6 py-12 relative">
+            <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
+                <div class="text-white max-w-xl pl-4 md:pl-12">
+                    <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold
                     <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-                    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
-                    style="font-family: 'Poppins', sans-serif; color: #ffffffff;"
-                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-                    data-key="abou_head">
-                    <?php echo get_content('abou_head', 'MGD Soccer Field'); ?>
-                    <span class="text-white
-                        <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-                        data-key="about_heading1"
+                        data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
+                        style="font-family: 'Poppins', sans-serif; color: #ffffffff;"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="abou_head">
+                        <?php echo get_content('abou_head', 'MGD Soccer Field'); ?>
+
+                    </h1>
+                    <p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000"
+                        style="font-family: 'Poppins', sans-serif;"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="about_text1">
+                        <?php echo get_content('about_text1', 'MGD Soccer Field Magelang hadir sebagai wadah bagi setiap komunitas pecinta sepak bola yang ingin merasakan sensasi bermain dengan kualitas terbaik dan suasana menyenangkan.'); ?>
+                    </p>
+
+                    <p class="text-[27px] leading-[36px] font-normal text-white text-shadow
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000"
+                        style="font-family: 'Poppins', sans-serif;"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="about_text2">
+                        <?php echo get_content('about_text2', 'Kami yakin bahwa sepak bola bukan hanya tentang mencetak gol, tapi juga tentang menjaga kebersamaan, tawa, dan semangat sportifitas.'); ?>
+                    </p>
+                </div>
+
+                <div class="w-full md:w-auto" data-aos="fade-left" data-aos-duration="1600" style="position: relative;">
+                    <img src="<?php echo get_content('about_image_path', 'min.jpg'); ?>" alt="Soccer image" class="w-full max-w-[430px]
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="about_image_path">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery-section" class="gallery-section py-5 bg-white text-black">
+        <div class="container mx-auto px-4">
+            <h2 class="text-5xl font-bold text-center text-gray-800
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                data-aos="fade-down"
+                style="font-family: 'Poppins', sans-serif;"
+                <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                data-key="gallery_heading">
+                <?php echo get_content('gallery_heading', 'Galeri MGD Soccer Field'); ?>
+            </h2>
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="my-4" style="font-size: 1.1rem; color: #333;">
+                <span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                    data-key="gallery_marquee_text"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                    <?php echo get_content('gallery_marquee_text', 'Lebih dari sekadar lapangan, Urban Soccer Field adalah ruang untuk mencipta kenangan. Galeri ini memperlihatkan momen kebersamaan, kerja tim, dan semangat sportivitas dari para pecinta bola.'); ?>
+                </span>
+            </marquee>
+
+            <div class="swiper myGallerySwiper max-w-4xl mx-auto">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="grid grid-cols-2 grid-rows-2 gap-4" id="galleryGrid">
+                            <!-- Gambar-gambar yang sudah ada -->
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image1_path', 'galeri/gal1.png'); ?>"
+                                    alt="Gallery Image 1"
+                                    class="gallery-image w-full h-auto object-cover shadow-md rounded-xl <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image1_path">
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image2_path', 'galeri/gal2.png'); ?>" alt="Gallery Image 2"
+                                    class="gallery-image w-full h-auto object-cover shadow-md rounded-xl <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image2_path">
+                                <?php if ($is_admin_mode): ?>
+                                    <input type="file" class="hidden-file-input" data-key="gallery_image2_path">
+                                <?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image3_path', 'galeri/gal3.png'); ?>" alt="Gallery Image 3"
+                                    class="gallery-image w-full h-auto object-cover shadow-md rounded-xl <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image3_path">
+                                <?php if ($is_admin_mode): ?>
+                                    <input type="file" class="hidden-file-input" data-key="gallery_image3_path">
+                                <?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image4_path', 'galeri/gal4.png'); ?>" alt="Gallery Image 4"
+                                    class="gallery-image w-full h-auto object-cover shadow-md rounded-xl <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image4_path">
+                                <?php if ($is_admin_mode): ?>
+                                    <input type="file" class="hidden-file-input" data-key="gallery_image4_path">
+                                <?php endif; ?>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="grid grid-cols-2 grid-rows-2 gap-4">
+
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image5_path', 'galeri/gal5.png'); ?>" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image5_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image6_path', 'galeri/gal6.png'); ?>" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image6_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image7_path', 'galeri/gal7.png'); ?>" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image7_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image8_path', 'galeri/gal8.png'); ?>" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image8_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="grid grid-cols-2 grid-rows-2 gap-4">
+
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image5_path', 'galeri/gal5.png'); ?>" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image5_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image6_path', 'galeri/gal6.png'); ?>" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image6_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image7_path', 'galeri/gal7.png'); ?>" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image7_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image8_path', 'galeri/gal8.png'); ?>" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image8_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="grid grid-cols-2 grid-rows-2 gap-4">
+
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image5_path', 'galeri/gal5.png'); ?>" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image5_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image6_path', 'galeri/gal6.png'); ?>" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image6_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image7_path', 'galeri/gal7.png'); ?>" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image7_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                            <div style="position: relative;">
+                                <img src="<?php echo get_content('gallery_image8_path', 'galeri/gal8.png'); ?>" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                                    data-key="gallery_image8_path">
+                                <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <section class="bg-gradient-to-r from-[#121212] px-6 py-10">
+        <div class="max-w-7xl mx-auto text-white">
+            <div class="flex flex-col md:flex-row justify-between text-center md:text-left items-center md:items-start gap-10">
+                <div class="flex-1 border-r border-gray-600 px-12">
+                    <ul class="list-disc list-inside space-y-3 text-left">
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list1_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list1_text', 'Lapangan ukuran 55 x 22 m'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list1_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list1_text', 'Lapangan ukuran 55 x 22 m'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list2_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list2_text', 'Lampu penerangan'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list3_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list3_text', 'Rumput sintetis Fifa Standar'); ?>
+                        </li>
+                    </ul>
+                </div>
+                <div class="flex-1 border-r border-gray-600 px-12">
+                    <ul class="list-disc list-inside space-y-3 text-left">
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list4_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list4_text', 'Kamar Mandi'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list4_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list4_text', 'Kamar Mandi'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list5_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list5_text', 'Cafe and Mushola'); ?>
+                        </li>
+                        <li class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="feature_list6_text"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('feature_list6_text', 'Parkir'); ?>
+                        </li>
+                    </ul>
+                </div>
+                <div class="flex-1 flex flex-col items-center justify-center text-center px-12">
+                    <i class="fas fa-map-marker-alt text-4xl mb-2 text-white"></i>
+                    <p class="text-lg font-semibold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                        data-key="location_address1"
                         <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-                        <?php echo get_content('about_heading1', 'Magelang'); ?>
-                    </span>
-</h1>
-<p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow
+                        <?php echo get_content('location_address1', 'Jl. Soekarno Hatta No.5'); ?>
+                    </p>
+                    <p class="text-lg font-semibold
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000"
-style="font-family: 'Poppins', sans-serif;"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="about_text1">
-<?php echo get_content('about_text1', 'MGD Soccer Field Magelang hadir sebagai wadah bagi setiap komunitas pecinta sepak bola yang ingin merasakan sensasi bermain dengan kualitas terbaik dan suasana menyenangkan.'); ?>
-</p>
+                        data-key="location_address2"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                        <?php echo get_content('location_address2', 'Magelang'); ?>
+                    </p>
+                </div>
+            </div>
 
-<p class="text-[27px] leading-[36px] font-normal text-white text-shadow
+            <div class="flex justify-start px-8 my-6 justify-content-center">
+                <h2 class="text-white text-5xl font-bold text-center
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000"
-style="font-family: 'Poppins', sans-serif;"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="about_text2">
-<?php echo get_content('about_text2', 'Kami yakin bahwa sepak bola bukan hanya tentang mencetak gol, tapi juga tentang menjaga kebersamaan, tawa, dan semangat sportifitas.'); ?>
-</p>
-</div>
+                    data-aos="fade-down"
+                    style="font-family: 'Poppins', sans-serif;"
+                    <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                    data-key="program_heading">
+                    <?php echo get_content('program_heading', 'Program Spesial MGD'); ?>
+                </h2>
+            </div>
 
-<div class="w-full md:w-auto" data-aos="fade-left" data-aos-duration="1600">
-<div style="position: relative;">
-<img src="<?php echo get_content('about_image_path', 'min.jpg'); ?>" alt="Soccer image" class="w-full max-w-[430px]
+            <div class="flex flex-col md:flex-row gap-6 my-10 justify-between">
+                <div class="relative w-full md:w-1/3">
+                    <div style="position: relative;">
+                        <img src="<?php echo get_content('program1_image_path', 'pemain.png'); ?>" alt="Private Event" class="w-full h-auto object-cover rounded-lg
 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="about_image_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="gallery-section" class="gallery-section py-5 bg-white text-black">
-<div class="container mx-auto px-4">
-<h2 class="text-5xl font-bold text-center text-gray-800
+                            data-key="program1_image_path">
+                        <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
+                        <p class="text-white text-2xl font-bold text-center
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-aos="fade-down"
-style="font-family: 'Poppins', sans-serif;"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="gallery_heading">
-<?php echo get_content('gallery_heading', 'Galeri MGD Soccer Field'); ?>
-</h2>
-<marquee behavior="scroll" direction="left" scrollamount="5" class="my-4" style="font-size: 1.1rem; color: #333;">
-<span class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="gallery_marquee_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('gallery_marquee_text', 'Lebih dari sekadar lapangan, Urban Soccer Field adalah ruang untuk mencipta kenangan. Galeri ini memperlihatkan momen kebersamaan, kerja tim, dan semangat sportivitas dari para pecinta bola.'); ?>
-</span>
-</marquee>
-<div class="swiper myGallerySwiper max-w-4xl mx-auto">
-<div class="swiper-wrapper">
-<div class="swiper-slide">
-<div class="grid grid-cols-2 grid-rows-2 gap-4">
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image1_path', 'galeri/gal1.png'); ?>" alt="Gallery Image 1" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                            data-key="program1_title"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('program1_title', 'Reward Pemain Terbaik'); ?>
+                        </p>
+                    </div>
+                </div>
+                <div class="relative w-full md:w-1/3">
+                    <div style="position: relative;">
+                        <img src="<?php echo get_content('program2_image_path', 'pelajar.png'); ?>" alt="Rent a Field" class="w-full h-auto object-cover rounded-lg
 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image1_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image2_path', 'galeri/gal2.png'); ?>" alt="Gallery Image 2" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
+                            data-key="program2_image_path">
+                        <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
+                        <p class="text-white text-2xl font-bold text-center
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+                            data-key="program2_title"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('program2_title', 'Diskon Khusus Pelajar'); ?>
+                        </p>
+                    </div>
+                </div>
+                <div class="relative w-full md:w-1/3">
+                    <div style="position: relative;">
+                        <img src="<?php echo get_content('program3_image_path', 'sewa.png'); ?>" alt="Open Play" class="w-full h-auto object-cover rounded-lg
 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image2_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image3_path', 'galeri/gal3.png'); ?>" alt="Gallery Image 3" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image3_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image4_path', 'galeri/gal4.png'); ?>" alt="Gallery Image 4" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image4_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-</div>
-</div>
-<div class="swiper-slide">
-<div class="grid grid-cols-2 grid-rows-2 gap-4">
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image5_path', 'galeri/gal5.png'); ?>" alt="Gallery Image 5" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image5_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image6_path', 'galeri/gal6.png'); ?>" alt="Gallery Image 6" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image6_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image7_path', 'galeri/gal7.png'); ?>" alt="Gallery Image 7" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image7_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div style="position: relative;">
-<img src="<?php echo get_content('gallery_image8_path', 'galeri/gal8.png'); ?>" alt="Gallery Image 8" class="gallery-image w-full h-auto object-cover shadow-md rounded-xl
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="gallery_image8_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-</div>
-</div>
-</div>
-<div class="swiper-button-next"></div>
-<div class="swiper-button-prev"></div>
-<div class="swiper-pagination"></div>
-</div>
-</div>
-</section>
-
-<section class="bg-gradient-to-r from-[#121212] px-6 py-10">
-<div class="max-w-7xl mx-auto text-white">
-<div class="flex flex-col md:flex-row justify-between text-center md:text-left items-center md:items-start gap-10">
-<div class="flex-1 border-r border-gray-600 px-12">
-<ul class="list-disc list-inside space-y-3 text-left">
-<li class="text-lg font-semibold
+                            data-key="program3_image_path">
+                        <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
+                        <p class="text-white text-2xl font-bold text-center
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list1_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list1_text', 'Lapangan ukuran 55 x 22 m'); ?>
-</li>
-<li class="text-lg font-semibold
+                            data-key="program3_title"
+                            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+                            <?php echo get_content('program3_title', 'Sewa Sepatu Gratis'); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="map-section" class="map-section py-5 bg-white text-black">
+        <h4 class="text-center section-title mb-4
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list2_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list2_text', 'Lampu penerangan'); ?>
-</li>
-<li class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list3_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list3_text', 'Rumput sintetis Fifa Standar'); ?>
-</li>
-</ul>
-</div>
-<div class="flex-1 border-r border-gray-600 px-12">
-<ul class="list-disc list-inside space-y-3 text-left">
-<li class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list4_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list4_text', 'Kamar Mandi'); ?>
-</li>
-<li class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list5_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list5_text', 'Cafe and Mushola'); ?>
-</li>
-<li class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="feature_list6_text"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('feature_list6_text', 'Parkir'); ?>
-</li>
-</ul>
-</div>
-<div class="flex-1 flex flex-col items-center justify-center text-center px-12">
-<i class="fas fa-map-marker-alt text-4xl mb-2 text-white"></i>
-<p class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="location_address1"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('location_address1', 'Jl. Soekarno Hatta No.5'); ?>
-</p>
-<p class="text-lg font-semibold
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="location_address2"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('location_address2', 'Magelang'); ?>
-</p>
-</div>
-</div>
+            data-key="map_title"
+            <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+            <?php echo get_content('map_title', 'Lokasi Kami'); ?>
+        </h4>
+        <div class="d-flex justify-content-center mt-4">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.6662217098583!2d110.2217516748534!3d-7.502051574001483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a8f1c869c6d39%3A0x7ea03e5884a0b39b!2sMGD%20Mini%20Soccer%20Magelang!5e0!3m2!1sid!2sid!4v1754552705608!5m2!1sid!2sid" width="80%" height="360" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </section>
 
-<div class="flex justify-start px-8 my-6 justify-content-center">
-<h2 class="text-white text-5xl font-bold text-center
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-aos="fade-down"
-style="font-family: 'Poppins', sans-serif;"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="program_heading">
-<?php echo get_content('program_heading', 'Program Spesial MGD'); ?>
-</h2>
-</div>
+    <footer class="relative overflow-hidden mt-16 bg-black">
+        <div class="relative max-w-7xl mx-auto px-6 py-16 flex flex-col items-center md:flex-row md:justify-center md:items-start gap-12 md:gap-24">
+            <div class="flex flex-col items-center md:items-start max-w-md md:max-w-none text-center md:text-left">
+                <div style="position: relative;">
+                    <img
+                        alt="USF Urban Soccer Field logo"
+                        class="h-40 mb-4 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
+                        data-key="footer_logo_path"
+                        src="<?php echo htmlspecialchars(get_content('footer_logo_path', 'logom.png')); ?>">
+                    <?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input" data-key="footer_logo_path" accept="image/*" /><?php endif; ?>
+                </div>
+            </div>
 
-<div class="flex flex-col md:flex-row gap-6 my-10 justify-between">
-<div class="relative w-full md:w-1/3">
-<div style="position: relative;">
-<img src="<?php echo get_content('program1_image_path', 'pemain.png'); ?>" alt="Private Event" class="w-full h-auto object-cover rounded-lg
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="program1_image_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-<p class="text-white text-2xl font-bold text-center
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="program1_title"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('program1_title', 'Reward Pemain Terbaik'); ?>
-</p>
-</div>
-</div>
-<div class="relative w-full md:w-1/3">
-<div style="position: relative;">
-<img src="<?php echo get_content('program2_image_path', 'pelajar.png'); ?>" alt="Rent a Field" class="w-full h-auto object-cover rounded-lg
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="program2_image_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-<p class="text-white text-2xl font-bold text-center
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="program2_title"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('program2_title', 'Diskon Khusus Pelajar'); ?>
-</p>
-</div>
-</div>
-<div class="relative w-full md:w-1/3">
-<div style="position: relative;">
-<img src="<?php echo get_content('program3_image_path', 'sewa.png'); ?>" alt="Open Play" class="w-full h-auto object-cover rounded-lg
-<?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="program3_image_path">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input"><?php endif; ?>
-</div>
-<div class="absolute inset-x-0 bottom-0 p-2 bg-black/70 rounded-b-lg">
-<p class="text-white text-2xl font-bold text-center
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="program3_title"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('program3_title', 'Sewa Sepatu Gratis'); ?>
-</p>
-</div>
-</div>
-</div>
-</div>
-</section>
+            <div class="flex flex-col md:flex-row md:gap-24 text-lg text-center md:text-left">
+                <div>
+                    <h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="footer_title"
+                        class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
+                        <?php echo htmlspecialchars(get_content('footer_title', 'Site')); ?>
+                    </h3>
+                    <ul class="space-y-2 font-normal hover-highlight">
+                        <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_1" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_1', 'Booking Lapangan')); ?></li>
+                        <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_2" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_2', 'Galeri MGD Soccer Field')); ?></li>
+                        <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_3" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_3', 'Program Spesial MGD')); ?></li>
+                        <li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_4" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_4', 'Lokasi MGD Soccer')); ?></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
+                        <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+                        data-key="footer_contact_title"
+                        class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
+                        <?php echo htmlspecialchars(get_content('footer_contact_title', 'Contact')); ?>
+                    </h3>
+                    <address class="not-italic space-y-3 font-normal hover-highlight">
+                        <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_address" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_address', 'Jl. Soekarno Hatta No.5, Magelang')); ?></p>
+                        <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_phone" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_phone', '+62 811 2653 988')); ?></p>
+                        <p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_company" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_company', 'MGD Soccer Field Magelang')); ?></p>
+                    </address>
+                    <ul class="flex space-x-6 mt-4 ms-auto text-white">
+                        <li>
+                            <a aria-label="YouTube" class="hover:text-[#5fa140ff)] social-icon"
+                                href="<?php echo htmlspecialchars(get_content('footer_yt_link', 'https://www.youtube.com/@urbAnsoccerfield')); ?>"
+                                <?php echo $is_admin_mode ? 'data-key="footer_yt_link" data-link="true" class="admin-editable-text"' : ''; ?>>
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a aria-label="Instagram" class="hover:text-[#5fa140ff)] social-icon"
+                                href="<?php echo htmlspecialchars(get_content('footer_ig_link', 'https://www.instagram.com/mgdsoccerfield/')); ?>"
+                                <?php echo $is_admin_mode ? 'data-key="footer_ig_link" data-link="true" class="admin-editable-text"' : ''; ?>>
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a aria-label="WhatsApp"
+                                class="hover:text-[#5fa140ff)]"
+                                href="<?php echo htmlspecialchars(get_content('footer_wa_link', 'https://wa.me/628112653988?text=Halo%20Urban%20Soccer%20Field%2C%20saya%20mau%20booking%20lapangan.')); ?>"
+                                target="_blank" rel="noopener noreferrer"
+                                <?php echo $is_admin_mode ? 'data-key="footer_wa_link" data-link="true" class="admin-editable-text"' : ''; ?>>
+                                <i class="fab fa-whatsapp social-icon"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-gray-300 text-sm py-4 border-t border-gray-800 font-normal">
+            <a class="text-[#7dbafbff] hover:underline text-white">&copy;Wabi Teknologi Indonesia</a>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        AOS.init();
 
-<section id="map-section" class="map-section py-5 bg-white text-black">
-<h4 class="text-center section-title mb-4
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-data-key="map_title"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
-<?php echo get_content('map_title', 'Lokasi Kami'); ?>
-</h4>
-<div class="d-flex justify-content-center mt-4">
-<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.6662217098583!2d110.2217516748534!3d-7.502051574001483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a8f1c869c6d39%3A0x7ea03e5884a0b39b!2sMGD%20Mini%20Soccer%20Magelang!5e0!3m2!1sid!2sid!4v1754552705608!5m2!1sid!2sid"width="80%" height="360" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-</div>
-</section>
+        // Inisialisasi Swiper
+        // Inisialisasi Swiper
+        var myGallerySwiper = new Swiper(".myGallerySwiper", {
+            loop: true,
+            spaceBetween: 30,
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+        });
 
-<footer class="relative overflow-hidden mt-16 bg-black">
-<div class="relative max-w-7xl mx-auto px-6 py-16 flex flex-col items-center md:flex-row md:justify-center md:items-start gap-12 md:gap-24">
-<div class="flex flex-col items-center md:items-start max-w-md md:max-w-none text-center md:text-left">
-<div style="position: relative;">
-<img
-alt="USF Urban Soccer Field logo"
-class="h-40 mb-4 <?php echo $is_admin_mode ? 'admin-editable-image' : ''; ?>"
-data-key="footer_logo_path"
-src="<?php echo htmlspecialchars(get_content('footer_logo_path', 'logom.png')); ?>">
-<?php if ($is_admin_mode): ?><input type="file" class="hidden-file-input" data-key="footer_logo_path" accept="image/*" /><?php endif; ?>
-</div>
-</div>
+        document.addEventListener("DOMContentLoaded", function() {
+            AOS.init();
+        });
 
-<div class="flex flex-col md:flex-row md:gap-24 text-lg text-center md:text-left">
-<div>
-<h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="footer_title"
-class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
-<?php echo htmlspecialchars(get_content('footer_title', 'Site')); ?>
-</h3>
-<ul class="space-y-2 font-normal hover-highlight">
-<li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_1" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_1', 'Booking Lapangan')); ?></li>
-<li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_2" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_2', 'Galeri MGD Soccer Field')); ?></li>
-<li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_3" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_3', 'Program Spesial MGD')); ?></li>
-<li <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_list_4" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_list_4', 'Lokasi MGD Soccer')); ?></li>
-</ul>
-</div>
-<div>
-<h3 class="text-[#ffffff] font-extrabold text-xl mb-4"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="footer_contact_title"
-class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>">
-<?php echo htmlspecialchars(get_content('footer_contact_title', 'Contact')); ?>
-</h3>
-<address class="not-italic space-y-3 font-normal hover-highlight">
-<p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_address" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_address', 'Jl. Soekarno Hatta No.5, Magelang')); ?></p>
-<p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_phone" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_phone', '+62 811 2653 988')); ?></p>
-<p <?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?> data-key="footer_company" class="<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"><?php echo htmlspecialchars(get_content('footer_company', 'MGD Soccer Field Magelang')); ?></p>
-</address>
- <ul class="flex space-x-6 mt-4 ms-auto text-white">
-<li>
-<a aria-label="YouTube" class="hover:text-[#5fa140ff)] social-icon"
- href="<?php echo htmlspecialchars(get_content('footer_yt_link', 'https://www.youtube.com/@urbAnsoccerfield')); ?>"
- <?php echo $is_admin_mode ? 'data-key="footer_yt_link" data-link="true" class="admin-editable-text"' : ''; ?>>
-<i class="fab fa-youtube"></i>
-</a>
-</li>
-<li>
-<a aria-label="Instagram" class="hover:text-[#5fa140ff)] social-icon"
- href="<?php echo htmlspecialchars(get_content('footer_ig_link', 'https://www.instagram.com/mgdsoccerfield/')); ?>"
- <?php echo $is_admin_mode ? 'data-key="footer_ig_link" data-link="true" class="admin-editable-text"' : ''; ?>>
-<i class="fab fa-instagram"></i>
-</a>
-</li>
-<li>
-<a aria-label="WhatsApp"
- class="hover:text-[#5fa140ff)]"
- href="<?php echo htmlspecialchars(get_content('footer_wa_link', 'https://wa.me/628112653988?text=Halo%20Urban%20Soccer%20Field%2C%20saya%20mau%20booking%20lapangan.')); ?>"
- target="_blank" rel="noopener noreferrer"
- <?php echo $is_admin_mode ? 'data-key="footer_wa_link" data-link="true" class="admin-editable-text"' : ''; ?>>
-        <i class="fab fa-whatsapp social-icon"></i>
-      </a>
-     </li>
-         </ul>
-      </div>
-       </div>
-   </div>
-<div class="text-center text-gray-300 text-sm py-4 border-t border-gray-800 font-normal">
-<a class="text-[#7dbafbff] hover:underline text-white
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-href="#"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="footer_copyright">
-<?php echo htmlspecialchars(get_content('footer_copyright', '©2025 by')); ?>
-<a class="text-[#7dbafbff] hover:underline
-<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
-href="#"
-<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
-data-key="footer_copyright">
-<?php echo htmlspecialchars(get_content('footer_copyrigh', 'MGD Soccer Field Magelang')); ?>
-</a>
-</div>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-<script>
-AOS.init();
+        let activeDay = "<?php echo date('Y-m-d'); ?>";
 
-// Inisialisasi Swiper
-// Inisialisasi Swiper
-var myGallerySwiper = new Swiper(".myGallerySwiper", {
-    loop: true,
-    spaceBetween: 30,
-    autoplay: {
-        delay: 4000,
-        disableOnInteraction: false,
-    },
-    pagination: {
-        el: ".swiper-pagination",
-        clickable: true,
-    },
-    navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
-    },
-});
+        const formModal = document.getElementById('formModal');
+        const detailBookingModal = document.getElementById('detailBookingModal');
+        const finalConfirmationModal = document.getElementById('finalConfirmationModal');
+        const videoModal = document.getElementById('videoModal');
+        const tutorialBtn = document.getElementById('toggleTutorialBtn');
+        const tutorialVideo = document.getElementById('tutorialVideo');
+        const weeklyScheduleContainer = document.getElementById('weeklyScheduleContainer');
+        const toggleWeeklyBtn = document.getElementById('toggleWeeklyBtn');
 
-document.addEventListener("DOMContentLoaded", function() {
-    AOS.init();
-});
+        tutorialBtn.addEventListener('click', () => {
+            openModal('videoModal');
+        });
 
-    let activeDay = "<?php echo date('Y-m-d'); ?>";
-
-    const formModal = document.getElementById('formModal');
-    const detailBookingModal = document.getElementById('detailBookingModal');
-    const finalConfirmationModal = document.getElementById('finalConfirmationModal');
-    const videoModal = document.getElementById('videoModal');
-    const tutorialBtn = document.getElementById('toggleTutorialBtn');
-    const tutorialVideo = document.getElementById('tutorialVideo');
-    const weeklyScheduleContainer = document.getElementById('weeklyScheduleContainer');
-    const toggleWeeklyBtn = document.getElementById('toggleWeeklyBtn');
-
-    tutorialBtn.addEventListener('click', () => {
-        openModal('videoModal');
-    });
-
-    // Menambahkan event listener untuk tombol toggle jadwal mingguan
-    toggleWeeklyBtn.addEventListener('click', () => {
-        if (weeklyScheduleContainer.style.display === 'none') {
-            weeklyScheduleContainer.style.display = 'block';
-            toggleWeeklyBtn.textContent = 'Sembunyikan Jadwal Mingguan';
-            // Panggil fungsi untuk memuat jadwal mingguan saat ditampilkan
-            fetchWeeklyBookings(activeDay);
-        } else {
-            weeklyScheduleContainer.style.display = 'none';
-            toggleWeeklyBtn.textContent = 'Tampilkan Jadwal Mingguan';
-        }
-    });
-
-
-    // Fungsi untuk membuka modal
-    function openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-            if (modalId === 'videoModal' && tutorialVideo) {
-                tutorialVideo.play();
-            }
-        }
-    }
-
-    // Fungsi untuk menutup modal
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            if (modalId === 'videoModal' && tutorialVideo) {
-                tutorialVideo.pause();
-                tutorialVideo.currentTime = 0; // Mengatur ulang video ke awal
-            }
-        }
-    }
-
-    function showBookingForm(time, date) {
-        // --- KODE BARU UNTUK KONFIRMASI DENGAN SWEETALERT2 ---
-        Swal.fire({
-            title: 'Yakin mau pesan?',
-            html: `Anda akan memesan lapangan pada tanggal <strong>${date}</strong> pukul <strong>${time}</strong>.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, pesan sekarang!',
-            cancelButtonText: 'Batal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Jika pengguna mengklik 'Ya', lanjutkan ke modal formulir booking
-                
-                // Tampilkan summary booking
-                const bookingSummary = document.getElementById('bookingSummary');
-                bookingSummary.style.display = 'block';
-                document.getElementById('biayaSewa').textContent = 'Rp700.000';
-                document.getElementById('totalBayar').textContent = 'Rp700.000';
-
-                openModal('formModal');
+        // Menambahkan event listener untuk tombol toggle jadwal mingguan
+        toggleWeeklyBtn.addEventListener('click', () => {
+            if (weeklyScheduleContainer.style.display === 'none') {
+                weeklyScheduleContainer.style.display = 'block';
+                toggleWeeklyBtn.textContent = 'Sembunyikan Jadwal Mingguan';
+                // Panggil fungsi untuk memuat jadwal mingguan saat ditampilkan
+                fetchWeeklyBookings(activeDay);
+            } else {
+                weeklyScheduleContainer.style.display = 'none';
+                toggleWeeklyBtn.textContent = 'Tampilkan Jadwal Mingguan';
             }
         });
-    }
 
-    function confirmBooking() {
-        // Logika konfirmasi booking sebelum submit
-        const fullName = document.getElementById('fullName').value;
-        const phone = document.getElementById('phone').value;
 
-        if (fullName === "" || phone === "") {
-            Swal.fire({
-                icon: 'error',
-                title: 'Opps...',
-                text: 'Nama dan Nomor Telepon harus diisi!'
-            });
-            return;
-        }
-
-        // Tampilkan data di modal konfirmasi
-        document.getElementById('confirmNama').textContent = fullName;
-        document.getElementById('confirmPhone').textContent = phone;
-        document.getElementById('confirmDate').textContent = activeDay; // Menggunakan tanggal yang aktif
-        // Ambil jam yang dipilih dari slot yang terakhir diklik, contoh:
-        const selectedSlot = document.querySelector('.slot.selected');
-        if (selectedSlot) {
-             document.getElementById('confirmTime').textContent = selectedSlot.dataset.time;
-        } else {
-             document.getElementById('confirmTime').textContent = "Tidak ada waktu terpilih";
-        }
-       
-        closeModal('formModal');
-        openModal('finalConfirmationModal');
-    }
-
-    function submitBooking() {
-        const nama = document.getElementById('fullName').value;
-        const no_hp = document.getElementById('phone').value;
-        const tanggal = activeDay; // Menggunakan tanggal yang aktif
-        const selectedSlot = document.querySelector('.slot.selected');
-        const jam = selectedSlot ? selectedSlot.dataset.time : '';
-        const jumlahPemain = document.getElementById('numPlayers').value;
-        const namaTim = document.getElementById('teamName').value;
-        const catatan = document.getElementById('notes').value;
-
-        if (nama === "" || no_hp === "" || tanggal === "" || jam === "") {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: 'Silakan lengkapi semua data yang diperlukan.'
-            });
-            return;
-        }
-
-        // Kirim data ke server
-        fetch('index.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `nama=${encodeURIComponent(nama)}&no_hp=${encodeURIComponent(no_hp)}&tanggal=${encodeURIComponent(tanggal)}&jam=${encodeURIComponent(jam)}&jumlah_pemain=${encodeURIComponent(jumlahPemain)}&nama_tim=${encodeURIComponent(namaTim)}&catatan=${encodeURIComponent(catatan)}`
-        })
-        .then(response => response.text())
-        .then(data => {
-            if (data.includes("Berhasil")) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Booking Berhasil!',
-                    text: 'Booking Anda telah berhasil dikonfirmasi.'
-                });
-                closeModal('finalConfirmationModal');
-                fetchDailyBookings(activeDay); // Refresh jadwal harian
-                if(weeklyScheduleContainer.style.display !== 'none') {
-                    fetchWeeklyBookings(activeDay); // Refresh jadwal mingguan jika sedang ditampilkan
+        // Fungsi untuk membuka modal
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                if (modalId === 'videoModal' && tutorialVideo) {
+                    tutorialVideo.play();
                 }
-            } else {
+            }
+        }
+
+        // Fungsi untuk menutup modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                if (modalId === 'videoModal' && tutorialVideo) {
+                    tutorialVideo.pause();
+                    tutorialVideo.currentTime = 0; // Mengatur ulang video ke awal
+                }
+            }
+        }
+
+        function showBookingForm(time, date) {
+            // --- KODE BARU UNTUK KONFIRMASI DENGAN SWEETALERT2 ---
+            Swal.fire({
+                title: 'Yakin mau pesan?',
+                html: `Anda akan memesan lapangan pada tanggal <strong>${date}</strong> pukul <strong>${time}</strong>.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, pesan sekarang!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika pengguna mengklik 'Ya', lanjutkan ke modal formulir booking
+
+                    // Tampilkan summary booking
+                    const bookingSummary = document.getElementById('bookingSummary');
+                    bookingSummary.style.display = 'block';
+                    document.getElementById('biayaSewa').textContent = 'Rp700.000';
+                    document.getElementById('totalBayar').textContent = 'Rp700.000';
+
+                    openModal('formModal');
+                }
+            });
+        }
+
+        function confirmBooking() {
+            // Logika konfirmasi booking sebelum submit
+            const fullName = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+
+            if (fullName === "" || phone === "") {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Booking Gagal',
-                    text: data
+                    title: 'Opps...',
+                    text: 'Nama dan Nomor Telepon harus diisi!'
                 });
+                return;
             }
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Terjadi kesalahan saat menghubungi server.'
-            });
-        });
-    }
 
-    document.getElementById('date-input').addEventListener('change', function() {
-        activeDay = this.value;
-        fetchDailyBookings(activeDay);
-        if(weeklyScheduleContainer.style.display !== 'none') {
-            fetchWeeklyBookings(activeDay);
+            // Tampilkan data di modal konfirmasi
+            document.getElementById('confirmNama').textContent = fullName;
+            document.getElementById('confirmPhone').textContent = phone;
+            document.getElementById('confirmDate').textContent = activeDay; // Menggunakan tanggal yang aktif
+            // Ambil jam yang dipilih dari slot yang terakhir diklik, contoh:
+            const selectedSlot = document.querySelector('.slot.selected');
+            if (selectedSlot) {
+                document.getElementById('confirmTime').textContent = selectedSlot.dataset.time;
+            } else {
+                document.getElementById('confirmTime').textContent = "Tidak ada waktu terpilih";
+            }
+
+            closeModal('formModal');
+            openModal('finalConfirmationModal');
         }
-    });
 
-    function getDayName(dateString) {
-        const date = new Date(dateString);
-        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        return dayNames[date.getDay()];
-    }
+        function submitBooking() {
+            const nama = document.getElementById('fullName').value;
+            const no_hp = document.getElementById('phone').value;
+            const tanggal = activeDay; // Menggunakan tanggal yang aktif
+            const selectedSlot = document.querySelector('.slot.selected');
+            const jam = selectedSlot ? selectedSlot.dataset.time : '';
+            const jumlahPemain = document.getElementById('numPlayers').value;
+            const namaTim = document.getElementById('teamName').value;
+            const catatan = document.getElementById('notes').value;
 
-    function fetchDailyBookings(date) {
-        const scheduleContainer = document.getElementById('schedule');
-        const dateInfo = document.getElementById('currentDateInfo');
-        dateInfo.textContent = `Tanggal: ${getDayName(date)}, ${new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'})}`;
-        
-        fetch(`index.php?get_daily_bookings=1&tanggal=${date}`)
-        .then(response => response.json())
-        .then(data => {
-            scheduleContainer.innerHTML = '';
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
+            if (nama === "" || no_hp === "" || tanggal === "" || jam === "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Silakan lengkapi semua data yang diperlukan.'
+                });
+                return;
+            }
 
-            for (const time in data) {
-                const isBooked = data[time].booked;
-                const slot = document.createElement('div');
-                slot.classList.add('slot');
-                slot.dataset.time = time;
-                
-                const slotDate = new Date(`${date}T${time}:00`);
-                const isPast = slotDate < now;
-                
-                if (isBooked) {
-                    slot.classList.add('booked');
-                }
-                if (isPast) {
-                    slot.classList.add('past-time');
-                }
+            // Kirim data ke server
+            fetch('index.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `nama=${encodeURIComponent(nama)}&no_hp=${encodeURIComponent(no_hp)}&tanggal=${encodeURIComponent(tanggal)}&jam=${encodeURIComponent(jam)}&jumlah_pemain=${encodeURIComponent(jumlahPemain)}&nama_tim=${encodeURIComponent(namaTim)}&catatan=${encodeURIComponent(catatan)}`
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.includes("Berhasil")) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Booking Berhasil!',
+                            text: 'Booking Anda telah berhasil dikonfirmasi.'
+                        });
+                        closeModal('finalConfirmationModal');
+                        fetchDailyBookings(activeDay); // Refresh jadwal harian
+                        if (weeklyScheduleContainer.style.display !== 'none') {
+                            fetchWeeklyBookings(activeDay); // Refresh jadwal mingguan jika sedang ditampilkan
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Booking Gagal',
+                            text: data
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat menghubungi server.'
+                    });
+                });
+        }
 
-                const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+        document.getElementById('date-input').addEventListener('change', function() {
+            activeDay = this.value;
+            fetchDailyBookings(activeDay);
+            if (weeklyScheduleContainer.style.display !== 'none') {
+                fetchWeeklyBookings(activeDay);
+            }
+        });
 
-                let slotContent = `
+        function getDayName(dateString) {
+            const date = new Date(dateString);
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            return dayNames[date.getDay()];
+        }
+
+        function fetchDailyBookings(date) {
+            const scheduleContainer = document.getElementById('schedule');
+            const dateInfo = document.getElementById('currentDateInfo');
+            dateInfo.textContent = `Tanggal: ${getDayName(date)}, ${new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'})}`;
+
+            fetch(`index.php?get_daily_bookings=1&tanggal=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    scheduleContainer.innerHTML = '';
+                    const now = new Date();
+                    const today = now.toISOString().split('T')[0];
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+
+                    for (const time in data) {
+                        const isBooked = data[time].booked;
+                        const slot = document.createElement('div');
+                        slot.classList.add('slot');
+                        slot.dataset.time = time;
+
+                        const slotDate = new Date(`${date}T${time}:00`);
+                        const isPast = slotDate < now;
+
+                        if (isBooked) {
+                            slot.classList.add('booked');
+                        }
+                        if (isPast) {
+                            slot.classList.add('past-time');
+                        }
+
+                        const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        let slotContent = `
                     <div class="slot-time flex-grow">${displayTime}</div>
                     <div class="slot-info">
-                        <span class="slot-status-label">${isBooked ? 'Sudah Dibooking' : 'Tersedia'}</span>
+                        <span class="slot-status-label">${isBooked ? 'Dipesan' : 'Tersedia'}</span>
                     </div>
                     <button class="slot-btn" onclick="${isBooked || isPast ? '' : `showBookingForm('${time}', '${date}')`}" ${isBooked || isPast ? 'disabled' : ''}>
-                        ${isBooked ? 'Sudah Dibooking' : (isPast ? 'Waktu sudah lewat' : 'Booking')}
+                        ${isBooked ? 'Dipesan' : (isPast ? '-' : 'Pesan')}
                     </button>
                 `;
 
-                slot.innerHTML = slotContent;
-                
-                if (!isBooked && !isPast) {
-                    slot.addEventListener('click', () => {
-                         document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                         slot.classList.add('selected');
-                         showBookingForm(time, date);
-                    });
-                }
-                
-                scheduleContainer.appendChild(slot);
-            }
-        });
-    }
+                        slot.innerHTML = slotContent;
 
-    function fetchWeeklyBookings(date) {
-        const weeklyBody = document.getElementById('weekly-schedule-body');
-        weeklyBody.innerHTML = '';
-        
-        // Perbaikan: Logika untuk mendapatkan tanggal Senin
-        const startDate = new Date(date);
-        const day = startDate.getDay();
-        const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-        startDate.setDate(diff);
-
-        const timeSlots = ['06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'];
-        const weeklyDates = Array.from({length: 7}, (_, i) => {
-            const d = new Date(startDate);
-            d.setDate(d.getDate() + i);
-            return d.toISOString().split('T')[0];
-        });
-
-        fetch(`index.php?get_weekly_bookings=1&start_date=${weeklyDates[0]}`)
-            .then(response => response.json())
-            .then(data => {
-                for (const time of timeSlots) {
-                    const row = document.createElement('div');
-                    row.classList.add('weekly-schedule-row');
-                    const timeCell = document.createElement('div');
-                    timeCell.classList.add('weekly-schedule-cell', 'time-label');
-                    
-                    // --- KODE BARU UNTUK MENAMPILKAN RENTANG WAKTU ---
-                    const slotDate = new Date(`1970-01-01T${time}:00`);
-                    const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
-                    timeCell.textContent = displayTime;
-                    // --- AKHIR KODE BARU ---
-                    
-                    row.appendChild(timeCell);
-                    
-                    for (let i = 1; i <= 7; i++) {
-                        const cell = document.createElement('div');
-                        cell.classList.add('weekly-schedule-cell');
-                        
-                        // Perbaikan: Menggunakan String(i) untuk mengakses kunci data
-                        const dayData = data[String(i)];
-                        if (dayData && dayData[time]) {
-                            cell.classList.add('booked');
-                            cell.textContent = 'Booked';
-                        } else {
-                            cell.textContent = '-';
+                        if (!isBooked && !isPast) {
+                            slot.addEventListener('click', () => {
+                                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                                slot.classList.add('selected');
+                                showBookingForm(time, date);
+                            });
                         }
-                        row.appendChild(cell);
+
+                        scheduleContainer.appendChild(slot);
                     }
-                    weeklyBody.appendChild(row);
-                }
+                });
+        }
+
+        function fetchWeeklyBookings(date) {
+            const weeklyBody = document.getElementById('weekly-schedule-body');
+            weeklyBody.innerHTML = '';
+
+            // Perbaikan: Logika untuk mendapatkan tanggal Senin
+            const startDate = new Date(date);
+            const day = startDate.getDay();
+            const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+            startDate.setDate(diff);
+
+            const timeSlots = ['06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'];
+            const weeklyDates = Array.from({
+                length: 7
+            }, (_, i) => {
+                const d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                return d.toISOString().split('T')[0];
             });
-    }
 
-    function showDetailBooking(tanggal, jam, nama) {
-        document.getElementById('detailNama').textContent = nama;
-        document.getElementById('detailWaktu').textContent = jam;
-        document.getElementById('detailTanggal').textContent = tanggal;
-        openModal('detailBookingModal');
-    }
+            fetch(`index.php?get_weekly_bookings=1&start_date=${weeklyDates[0]}`)
+                .then(response => response.json())
+                .then(data => {
+                    for (const time of timeSlots) {
+                        const row = document.createElement('div');
+                        row.classList.add('weekly-schedule-row');
+                        const timeCell = document.createElement('div');
+                        timeCell.classList.add('weekly-schedule-cell', 'time-label');
 
-    // Panggil fungsi untuk pertama kali
-    fetchDailyBookings(activeDay);
-    
-</script>
-<script>
-   
+                        // --- KODE BARU UNTUK MENAMPILKAN RENTANG WAKTU ---
+                        const slotDate = new Date(`1970-01-01T${time}:00`);
+                        const displayTime = time.substring(0, 5) + ' - ' + new Date(slotDate.getTime() + 90 * 60000).toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        timeCell.textContent = displayTime;
+                        // --- AKHIR KODE BARU ---
 
-    // Carousel script
-    const slidesContainer = document.querySelector('.slides');
-    const slides = document.querySelectorAll('.slide');
-    let currentSlide = 0;
+                        row.appendChild(timeCell);
 
-    function nextSlide() {
-        currentSlide = (currentSlide + 1) % slides.length;
-        updateCarousel();
-    }
+                        for (let i = 1; i <= 7; i++) {
+                            const cell = document.createElement('div');
+                            cell.classList.add('weekly-schedule-cell');
 
-    function updateCarousel() {
-        slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
-    }
+                            // Perbaikan: Menggunakan String(i) untuk mengakses kunci data
+                            const dayData = data[String(i)];
+                            if (dayData && dayData[time]) {
+                                cell.classList.add('booked');
+                                cell.textContent = 'Booked';
+                            } else {
+                                cell.textContent = '-';
+                            }
+                            row.appendChild(cell);
+                        }
+                        weeklyBody.appendChild(row);
+                    }
+                });
+        }
 
-    // Set interval for auto-play
-    setInterval(nextSlide, 5000);
+        function showDetailBooking(tanggal, jam, nama) {
+            document.getElementById('detailNama').textContent = nama;
+            document.getElementById('detailWaktu').textContent = jam;
+            document.getElementById('detailTanggal').textContent = tanggal;
+            openModal('detailBookingModal');
+        }
 
-</script>
+        // Panggil fungsi untuk pertama kali
+        fetchDailyBookings(activeDay);
+    </script>
+    <script>
+        // Carousel script
+        const slidesContainer = document.querySelector('.slides');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            updateCarousel();
+        }
+
+        function updateCarousel() {
+            slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        // Set interval for auto-play
+        setInterval(nextSlide, 5000);
+    </script>
 </body>
 
 </html>
