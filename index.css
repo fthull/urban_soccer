@@ -1,0 +1,2037 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* .container {
+            max-width: 11200px;
+            margin: 0 auto;
+        } */
+        
+        /* Navbar styling */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+/* background: linear-gradient(135deg, rgba(30, 60, 114, 0.7) 0%, rgba(42, 82, 152, 0.7) 100%); */
+            padding: 10px 20px;
+            /* border-radius: 7px; */
+            /* box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); */
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav img {
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav img:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-link {
+            color:  #2a5298;
+            text-decoration: none;
+            padding: 10px 200px;
+            margin: 0 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* Hamburger menu - disembunyikan di desktop */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+        }
+        
+        .hamburger span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Styling untuk mode admin */
+        .admin-editable-image {
+            border: 2px dashed #ffcc00;
+            cursor: pointer;
+        }
+        
+        .hidden-file-input {
+            display: none;
+        }
+        
+        /* Konten demo
+        .content {
+            margin-top: 0px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        } */
+        
+        /* .content h1 {
+            color: #2a5298;
+            margin-bottom: 20px;
+        }
+        
+        .content p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        } */
+        
+        /* Media queries untuk responsivitas */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+            
+            .nav-links {
+                position: fixed;
+                left: -100%;
+                top: 80px;
+                flex-direction: column;
+                background-color: #353b48;
+                width: 20%;
+                text-align: center;
+                transition: 0.3s;
+                box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+                padding: 20px 0;
+                border-radius: 0 10px 10px 0;
+                z-index: 999;
+            }
+            
+            .nav-links.active {
+                left: 0;
+            }
+            
+            .nav-link {
+                margin: 10px 0;
+                padding: 15px;
+                width: 50%;
+                display: block;
+            }
+            
+            .hamburger.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+            
+            .hamburger.active span:nth-child(2) {
+                opacity: 0;
+            }
+            
+            .hamburger.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(7px, -6px);
+            }
+        }
+        :root {
+            --usf-green: #1c2531;
+            --primary-color: var(--usf-green);
+            --light-color: #fff;
+        }
+
+        /* Gaya yang sudah ada dari file Anda */
+        .carousel {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            display: flex;
+            scroll-behavior: smooth;
+        }
+
+        .carousel-item {
+            scroll-snap-align: start;
+            flex: none;
+            width: 100%;
+        }
+
+        .carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Animasi muncul */
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .fade-in-left {
+            animation: fadeInSlide 1s ease-out forwards;
+        }
+
+        .header-booking {
+            background-color: #ffffffff;
+            color: #000000ff;
+        }
+
+        .fade-in-left {
+            animation: fadeInSlide 1s ease-out forwards;
+        }
+
+        .header-booking {
+            background-color: #1c2531;
+            color: #fff;
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-booking h1 {
+            font-size: 1.5rem;
+            /* Ukuran font diubah menjadi lebih kecil */
+            margin: 0;
+            font-weight: 700;
+            color: #dbe0e9;
+        }
+
+        .header-booking h1 span {
+            color: #ffd600;
+            font-weight: 800;
+        }
+
+        .header-booking .price {
+            color: #ffd600;
+            font-weight: bold;
+            margin-top: 1.2rem;
+            font-size: 1.3rem;
+        }
+
+        .header-booking .note {
+            color: #ccd2dc;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        /* === MAIN CONTAINER from coba.php === */
+        .container-booking {
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #353b48;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        h2.booking-title {
+            margin-bottom: 0.5rem;
+            text-align: center;
+            color: #dbe0e9;
+            font-size: 1.8rem;
+        }
+
+        .date-info {
+            text-align: center;
+            color: #a7b0bf;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .date-picker-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .date-picker-container label {
+            margin-right: 10px;
+            color: #dbe0e9;
+        }
+
+        .date-picker-container input {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #5a6473;
+            background-color: #2f343e;
+            color: #fff;
+            outline: none;
+            width: 200px;
+        }
+
+        /* Pastikan ini adalah kode untuk kontainer grid */
+        /* Atur kontainer grid */
+        /* Tambahkan ID #schedule untuk selektor yang lebih spesifik */
+        .schedule-grid {
+            /* Mengaktifkan tata letak grid dan menimpa gaya flexbox yang mungkin ada */
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+
+            /* === SCHEDULE SLOTS from coba.php === */
+            .schedule-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1rem;
+            }
+
+            @media (max-width: 1024px) {
+                .schedule-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            @media (max-width: 600px) {
+                .schedule-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .slot {
+                background-color: #2f343e;
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: left;
+                color: #fff;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.3s;
+                position: relative;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .slot:hover {
+                background-color: #3d434f;
+            }
+
+            .slot-time {
+                font-size: 1.1rem;
+                /* Ukuran font lebih kecil */
+                margin-bottom: 0.5rem;
+            }
+
+            .slot-time.flex-grow {
+                flex-grow: 1;
+                /* Biarkan waktu mengisi ruang */
+            }
+
+
+            .slot-status-label {
+                font-size: 0.8rem;
+                /* Ukuran font lebih kecil */
+                color: #a7b0bf;
+            }
+
+            .slot-team-label {
+                font-size: 0.9rem;
+                color: #a7b0bf;
+                display: block;
+            }
+
+            .slot-info {
+                font-size: 0.9rem;
+                /* Ukuran font lebih kecil */
+                color: #fff;
+                margin-bottom: 1rem;
+            }
+
+            .slot-btn {
+                display: block;
+                width: 100%;
+                padding: 0.5rem 0.8rem;
+                /* Mengubah ukuran padding */
+                background-color: #283fa7ff;
+                padding: 0.5rem 0.8rem;
+                /* Mengubah ukuran padding */
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .slot.booked .slot-btn {
+                background-color: #dc3545;
+                cursor: not-allowed;
+            }
+
+            .slot.past-time .slot-btn {
+                background-color: #6c757d;
+                cursor: not-allowed;
+            }
+
+            .weekly-schedule-container {
+                overflow: auto;
+                /* Memungkinkan scrolling */
+                max-width: 1100px;
+                /* Gunakan max-width agar lebih responsif */
+                margin: 0 auto;
+                /* Ini yang membuat elemen menjadi di tengah */
+            }
+
+            .weekly-schedule-table {
+                display: flex;
+                flex-direction: column;
+                background-color: #2f343e;
+                border-radius: 12px;
+                overflow: hidden;
+                margin-top: 2rem;
+                min-width: 800px;
+                /* Lebar minimum untuk memastikan scroll */
+            }
+
+            .weekly-schedule-header {
+                display: grid;
+                grid-template-columns: 140px repeat(7, 1fr);
+                /* 80px untuk kolom waktu */
+                background-color: #1c2531;
+                padding: 1rem 0;
+                font-weight: bold;
+                color: #dbe0e9;
+                text-align: center;
+                position: sticky;
+                /* Membuat header lengket */
+                top: 0;
+                /* Menempel di bagian atas saat scroll */
+                z-index: 10;
+            }
+
+            .weekly-schedule-row {
+                display: grid;
+                grid-template-columns: 140px repeat(7, 1fr);
+                /* 80px untuk kolom waktu */
+                text-align: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #5a6473;
+            }
+
+            .weekly-schedule-row:last-child {
+                border-bottom: none;
+            }
+
+            .weekly-schedule-cell {
+                padding: 1rem 0.5rem;
+                color: #a7b0bf;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .weekly-schedule-cell.time-label {
+                font-weight: bold;
+                background-color: #353b48;
+                color: #fff;
+                position: sticky;
+                /* Membuat kolom waktu lengket */
+                left: 0;
+                /* Menempel di bagian kiri saat scroll */
+                z-index: 5;
+            }
+
+            .weekly-schedule-cell.booked {
+                background-color: var(--usf-green);
+                /* Warna hijau gelap baru */
+                color: #fff;
+                cursor: pointer;
+                font-weight: bold;
+                transition: background-color 0.2s;
+            }
+
+            .weekly-schedule-cell.booked:hover {
+                background-color: #35448cff;
+                /* Warna hover yang lebih cerah */
+            }
+
+
+            /* Styles for the new modals from coba.php */
+            /* === MODAL === */
+            /* --- Perbaikan Z-Index Modal --- */
+            .modal-booking {
+                z-index: 1050;
+                /* Tingkatkan nilai z-index agar selalu di atas navbar (z-index: 1000) */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content-booking {
+                background-color: #2f343e;
+                color: #dbe0e9;
+                border-radius: 12px;
+                padding: 1.5rem;
+                /* Padding dikurangi */
+                max-width: 400px;
+                /* Ukuran kotak dikurangi */
+                width: 90%;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                position: relative;
+                border-radius: 16px;
+                /* === KODE BARU UNTUK SCROLLING === */
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .modal-content-booking h3 {
+                margin-top: 0;
+                color: #dbe0e9;
+                font-size: 1.5rem;
+                /* Ukuran font judul dikurangi */
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+                /* Jarak bawah dikurangi */
+            }
+
+            .modal-content-booking p {
+                font-size: 1rem;
+                /* Ukuran font paragraf dikurangi */
+                color: #a7b0bf;
+                margin-bottom: 1rem;
+                /* Jarak bawah dikurangi */
+            }
+
+            .modal-content-booking button {
+                margin-top: 1rem;
+                padding: 0.6rem 1.2rem;
+                /* Ukuran padding tombol dikurangi */
+                border: none;
+                background-color: #4a90e2;
+                color: white;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+        }
+
+        .weekly-schedule-cell.pending {
+            background-color: #a79102ff;
+            /* Warna hijau gelap baru */
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .weekly-schedule-cell.pending:hover {
+            background-color: #958e17ff;
+            /* Warna hover yang lebih cerah */
+        }
+
+        /* Styling untuk Modal Booking */
+        .modal-booking {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Konten di dalam Modal */
+        .modal-content-booking {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            font-family: 'Poppins', sans-serif;
+            animation: fadeIn 0.3s ease-out;
+            border: 1px solid #333;
+
+            max-height: 90vh;
+            /* Tentukan tinggi maksimal 90% dari viewport height */
+            overflow-y: auto;
+            /* Tambahkan scrollbar vertikal jika konten melebihi tinggi maksimal */
+        }
+
+        /* Animasi untuk modal */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tombol Tutup */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #888;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 5px;
+            /* Posisi diubah menjadi 5px dari atas */
+            right: 10px;
+            /* Posisi diubah */
+            background-color: transparent !important;
+            border: none !important;
+            color: #dbe0e9;
+            font-size: 2rem;
+            /* Ukuran tombol close diperbesar */
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ffd600;
+            /* Warna hover disesuaikan */
+        }
+
+        /* CSS tambahan untuk memastikan tombol close-btn transparan */
+        .modal-content-booking .close-btn {
+            background-color: transparent !important;
+            border: none !important;
+            color: #dbe0e9;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        /* New style for detail booking modal */
+        #detailBookingModal .modal-content-booking {
+            max-width: 300px;
+            text-align: center;
+            padding: 1.5rem;
+            border: 2px solid #ffd600;
+            animation: fadeInZoom 0.3s ease-out forwards;
+        }
+
+        #detailBookingModal h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #ffd600;
+            padding-bottom: 0.5rem;
+            display: none;
+        }
+
+        #detailBookingModal #bookingDetails {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding-top: 0.5rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        #detailBookingModal #bookingDetails .detail-item {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+            flex-direction: column;
+            line-height: 1.5;
+        }
+
+        #detailBookingModal #bookingDetails .detail-item strong {
+            color: #a7b0bf;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        #detailBookingModal #bookingDetails .detail-value {
+            font-weight: bold;
+            color: #ffd600;
+            font-size: 1.1rem;
+        }
+
+        #detailBookingModal .confirm-btn {
+            background-color: #1f3042ff;
+            width: 100%;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+        }
+
+        #detailBookingModal .confirm-btn:hover {
+            background-color: #48698cff;
+        }
+
+        /* Animasi untuk modal */
+        @keyframes fadeInZoom {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .close-btn:hover {
+            color: #e0e0e0;
+        }
+
+        /* Judul dan sub-judul */
+        .modal-content-booking h3 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 2.2rem;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .modal-content-booking p {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #a0a0a0;
+            font-size: 1rem;
+        }
+
+        /* Container Form */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Grup Form untuk input berpasangan */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (min-width: 640px) {
+            .form-group {
+                flex-direction: row;
+            }
+        }
+
+        .form-group>div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Label Input */
+        .form-container label {
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Input dan Textarea */
+        .form-container input[type="text"],
+        .form-container input[type="tel"],
+        .form-container input[type="number"],
+        .form-container textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-container input:focus,
+        .form-container textarea:focus {
+            border-color: #ffd600;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.2);
+        }
+
+        /* Styling untuk input plus/minus */
+        .input-plus-minus {
+            display: flex;
+            align-items: center;
+            background-color: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .input-plus-minus input {
+            border: none;
+            text-align: center;
+            background-color: transparent;
+            padding: 12px 0;
+        }
+
+        .input-plus-minus button {
+            background-color: #ffd600;
+            color: #1a1a1a;
+            border: none;
+            font-size: 1.2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .input-plus-minus button:hover {
+            background-color: #e6c000;
+        }
+
+        .form-container .confirm-btn:hover {
+            background-color: #304055ff;
+            ;
+        }
+
+        .input-plus-minus .btn-minus {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .input-plus-minus .btn-plus {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Tombol Aksi */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .confirm-btn,
+        .cancel-btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            border: none;
+        }
+
+        .confirm-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            background-color: #45a049;
+        }
+
+        .cancel-btn {
+            background-color: #555;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background-color: #444;
+        }
+
+        /* Perbaikan untuk tampilan modal konfirmasi akhir */
+        .confirmation-confirm-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .confirmation-confirm-btn:hover {
+            background-color: #45a049;
+        }
+
+        .confirmation-cancel-btn {
+            background-color: #555;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .confirmation-cancel-btn:hover {
+            background-color: #444;
+        }
+
+        /* Gaya yang sudah ada dari file Anda */
+        .carousel {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            display: flex;
+            scroll-behavior: smooth;
+        }
+
+        .carousel-item {
+            scroll-snap-align: start;
+            flex: none;
+            width: 100%;
+        }
+
+        .carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Animasi muncul */
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .fade-in-left {
+            animation: fadeInSlide 1s ease-out forwards;
+        }
+
+        /* About Section Styles */
+        body {
+            font-family: "Poppins", sans-serif;
+        }
+
+        .background-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -10;
+        }
+
+        .text-shadow {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Gaya tambahan untuk Swiper.js */
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: var(--primary-color) !important;
+            background-color: var(--light-color) !important;
+            border-radius: 50%;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            background-color: var(--primary-color) !important;
+            color: var(--light-color) !important;
+        }
+
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 18px !important;
+            font-weight: bold;
+        }
+
+        .swiper-pagination-bullet {
+            background: #ccc !important;
+            opacity: 1 !important;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: var(--primary-color) !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+
+        }
+
+        /* Set tinggi semua baris tanggal menjadi 120px */
+        .fc-daygrid-day-frame {
+            height: 120px !important;
+            min-height: 120px !important;
+        }
+
+        /* Area events dengan scroll */
+        .fc-daygrid-day-events {
+            overflow-y: auto;
+            max-height: calc(120px - 30px);
+            /* 30px untuk header tanggal */
+            margin-right: 2px;
+        }
+
+        /* Header tanggal */
+        .fc-daygrid-day-top {
+            height: 30px;
+        }
+
+        /* Abu-abu default jika tidak ada match */
+
+        /* Hilangkan padding yang tidak perlu */
+        .fc-daygrid-day {
+            padding: 0 !important;
+        }
+
+        /* Pastikan sel tanggal memiliki tinggi yang konsisten */
+        .fc-daygrid-day {
+            height: 120px !important;
+        }
+
+        .fc-button-primary {
+            background-color: var(--usf-green) !important;
+            border-color: var(--usf-green) !important;
+            color: black !important;
+        }
+
+        .fc-button-primary:hover {
+            background-color: #c0db00 !important;
+            border-color: #c0db00 !important;
+        }
+
+        .fc-daygrid-day.fc-day-today {
+            background-color: rgba(0, 214, 200, 0.2) !important;
+        }
+
+        #calendar-container {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Footer Styles */
+        input:focus {
+            color: var(--usf-green);
+        }
+
+        .hover-highlight li:hover,
+        .hover-highlight p:hover {
+            color: #b2daedff;
+            cursor: pointer;
+        }
+
+        .social-icon {
+            font-size: 1.75rem;
+        }
+
+        /* === GAYA UNTUK HOME DAN NAVBAR === */
+
+        /* GAYA NAVBAR UTAMA */
+        .header {
+            width: 100%;
+            padding: 0px 0;
+            z-index: 1000;
+            /* Memastikan navbar selalu di atas konten lain */
+            transition: background-color 0.3s ease;
+        }
+
+        /* Navbar utama */
+        .navbar-menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 10px;
+            background-color: #353b48;
+        }
+
+        /* Kontainer navigasi */
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 7rem;
+        }
+
+        /* Aturan untuk logo */
+        .nav img {
+            width: 100px;
+            /* Ukuran default desktop */
+            height: auto;
+            transition: transform 0.3s ease;
+            /* Efek halus saat hover */
+        }
+
+        /* Style link navigasi */
+        .nav-link {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .nav-link:hover {
+            background-color: #e9ecef;
+
+            /* Header tanggal */
+            .fc-daygrid-day-top {
+                height: 30px;
+            }
+
+            /* Event item styling */
+            .fc-event {
+                font-size: 12px;
+                padding: 2px 4px;
+                margin-bottom: 2px;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            /* Warna layanan custom */
+            .fc-event-cuci-eksterior {
+                background-color: #00ff88ff;
+                border-color: #ffffffff;
+            }
+
+            /* Biru */
+            .fc-event-cuci-interior {
+                background-color: #f4ff2cff;
+                border-color: #ffffffff;
+            }
+
+            /* Hijau */
+            .fc-event-detailing {
+                background-color: #d5beffff;
+                border-color: #ffffffff;
+            }
+
+            /* Oranye */
+            .fc-event-cuci-mobil {
+                background-color: #ffffffff;
+                border-color: #ffffffff;
+            }
+
+            /* Merah */
+            .fc-event-salon-mobil-kaca {
+                background-color: #ffb080ff;
+                border-color: #ffffffff;
+            }
+
+            /* Ungu */
+            .fc-event-perbaiki-mesin {
+                background-color: #ffa6c2ff;
+                border-color: #ffffffff;
+            }
+
+            /* Coklat */
+            .fc-event-default {
+                background-color: #ff7676ff;
+                border-color: #ffffffff;
+            }
+        }
+
+        /* Abu-abu default jika tidak ada match */
+
+        /* Hilangkan padding yang tidak perlu */
+        .fc-daygrid-day {
+            padding: 0 !important;
+        }
+
+        /* Pastikan sel tanggal memiliki tinggi yang konsisten */
+        .fc-daygrid-day {
+            height: 120px !important;
+        }
+
+        .fc-button-primary {
+            background-color: var(--usf-green) !important;
+            border-color: var(--usf-green) !important;
+            color: black !important;
+        }
+
+        .fc-button-primary:hover {
+            background-color: #c0db00 !important;
+            border-color: #c0db00 !important;
+        }
+
+        .fc-daygrid-day.fc-day-today {
+            background-color: rgba(179, 214, 0, 0.2) !important;
+        }
+
+        #calendar-container {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Footer Styles */
+        input:focus {
+            color: var(--usf-green);
+        }
+
+        .hover-highlight li:hover,
+        .hover-highlight p:hover {
+            color: var(--usf-green);
+            cursor: pointer;
+        }
+
+        .social-icon {
+            font-size: 1.75rem;
+        }
+
+        /* === GAYA UNTUK HOME DAN NAVBAR === */
+
+        /* Navbar */
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .logo img {
+            height: 50px;
+            filter: none;
+            /* Logo tetap berwarna asli */
+        }
+
+        .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .nav-link.disabled {
+            color: #6c757d;
+            pointer-events: none;
+        }
+
+        /* Responsive untuk mobile */
+        @media (max-width: 768px) {
+
+            .navbar-menu {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+
+            .nav {
+                .navbar-menu .nav-link::after {
+                    content: '';
+                    position: absolute;
+                    width: 0;
+                    height: 2px;
+                    background-color: var(--usf-green);
+                    bottom: -5px;
+                    left: 0;
+                    transition: width 0.3s ease;
+                }
+
+                .navbar-menu .nav-link:hover::after {
+                    width: 100%;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 0.75rem;
+                }
+
+                .nav img {
+                    width: 80px;
+                    /* Logo lebih kecil di mobile */
+                    margin-bottom: 0.5rem;
+                }
+
+                .nav-link {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.9rem;
+                }
+            }
+
+            /* Tambahan untuk mode admin */
+            .admin-editable-image {
+                cursor: pointer;
+                outline: 2px dashed #0d6efd;
+            }
+
+            .hidden-file-input {
+                display: none;
+            }
+
+            html {
+                overflow-x: hidden;
+                /* Mencegah scroll horizontal */
+            }
+        }
+
+        /* Base styles untuk hero section */
+        .hero-section {
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        /* Responsive font sizes */
+        .hero-title {
+            font-size: 4rem;
+            /* Ukuran default desktop */
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-book {
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+                /* 37.5% lebih kecil dari desktop */
+                line-height: 1.1;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+                /* 27% lebih kecil dari desktop */
+            }
+
+            .btn-book {
+                font-size: 1rem;
+                padding: 0.6rem 1.5rem;
+            }
+
+            .btn-book:hover {
+                background-color: #55a858;
+                transform: translateY(-2px);
+            }
+        }
+
+        /* Extra small devices (phones, 576px and down) */
+        @media (max-width: 576px) {
+            .hero-title {
+                font-size: 2rem;
+                /* 50% lebih kecil dari desktop */
+                margin-bottom: 0.8rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .btn-book {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Penyesuaian untuk mode admin */
+        .admin-editable-text {
+            min-height: 1em;
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .admin-editable-text {
+                min-height: 1.2em;
+                /* Lebih mudah diklik di mobile */
+            }
+        }
+
+        /* Gaya tambahan untuk Swiper.js */
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: var(--primary-color) !important;
+            background-color: var(--light-color) !important;
+            border-radius: 50%;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            background-color: var(--primary-color) !important;
+            color: var(--light-color) !important;
+        }
+
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 18px !important;
+            font-weight: bold;
+        }
+
+        .swiper-pagination-bullet {
+            background: #ccc !important;
+            opacity: 1 !important;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: var(--primary-color) !important;
+        }
+
+        /* CSS BARU UNTUK GALERI */
+        .myGallerySwiper {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        .myGallerySwiper .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .myGallerySwiper .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            height: 100%;
+        }
+
+        .myGallerySwiper .grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .myGallerySwiper .grid img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ensure horizontal layout */
+        .grid.grid-cols-4 {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            /* Fixed height for consistency */
+            object-fit: cover;
+        }
+
+
+        /* Base styles untuk section */
+        .bg-gradient-to-r {
+            padding: 2rem 1rem !important;
+            /* Padding lebih kecil di mobile */
+        }
+
+        /* Responsive text scaling */
+        .text-lg {
+            font-size: 1rem;
+            /* Default 1.125rem */
+        }
+
+        .text-2xl {
+            font-size: 1.25rem;
+            /* Default 1.5rem */
+        }
+
+        .text-5xl {
+            font-size: 2rem;
+            /* Default 3rem */
+        }
+
+        /* Responsive layout untuk fitur list */
+        @media (max-width: 768px) {
+
+            .border-r {
+                border-right: none !important;
+                border-bottom: 1px solid #4b5563;
+                padding: 0 0 1.5rem 0 !important;
+                margin-bottom: 1.5rem;
+            }
+
+            .px-12 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+
+
+        @media (max-width: 768px) {
+            .w-full.md\:w-1\/3 {
+                width: 100% !important;
+                margin-bottom: 1.5rem;
+            }
+
+            /* Text overlay lebih kecil */
+            .absolute.bottom-0 {
+                padding: 0.5rem !important;
+            }
+        }
+
+        /* Penyesuaian khusus untuk teks yang editable di mobile */
+        .admin-editable-text {
+            min-height: 1em;
+            /* Pastikan tetap bisa diklik */
+        }
+
+        /* Icon location lebih kecil */
+        .fa-map-marker-alt {
+            font-size: 2rem !important;
+        }
+
+        /* Padding heading program */
+        .px-8 {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .my-6 {
+            margin-top: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Base Footer Styles */
+        footer {
+            padding-top: 2rem;
+            padding-bottom: 0;
+        }
+
+        /* Container Responsive */
+        .max-w-7xl {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        /* Layout Adjustments for Mobile */
+        @media (max-width: 768px) {
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+                gap: 2rem;
+                align-items: center;
+            }
+
+            .md\:gap-24 {
+                gap: 2rem;
+            }
+
+            .md\:justify-center {
+                justify-content: center;
+            }
+
+            .text-center.md\:text-left {
+                text-align: center !important;
+            }
+        }
+
+        /* Logo Responsive */
+        .h-40 {
+            height: 30vw !important;
+            max-height: 120px;
+            min-height: 80px;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Text Sizing for Mobile */
+        @media (max-width: 768px) {
+            .text-lg {
+                font-size: 0.9rem;
+            }
+
+            .text-xl {
+                font-size: 1.1rem;
+            }
+
+            address p,
+            .hover-highlight li {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Columns Layout */
+        @media (max-width: 768px) {
+            .md\:flex-row {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .max-w-md {
+                max-width: 100% !important;
+            }
+        }
+
+        /* Social Icons */
+        .social-icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .flex.space-x-6 {
+                justify-content: center;
+                margin-top: 1.5rem;
+            }
+        }
+
+        /* Copyright Section */
+        .py-4 {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            font-size: 0.8rem;
+        }
+
+        /* Hover Effects (Desktop only) */
+        @media (hover: hover) {
+
+            .hover-highlight li:hover,
+            .social-icon:hover {
+                color: #5fa140;
+                cursor: pointer;
+            }
+        }
+
+        /* Admin Mode Adjustments */
+        .admin-editable-image {
+            min-width: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-editable-text {
+                min-height: 1.2em;
+                /* Better touch target */
+            }
+        }
+
+        /* Base Booking Section Styles */
+        .booking-section {
+            padding: 2rem 0;
+        }
+
+        /* Responsive Font Sizes */
+        .text-5xl {
+            font-size: 3rem;
+            /* Desktop */
+        }
+
+        .text-3xl {
+            font-size: 1.75rem;
+            /* Desktop */
+        }
+
+        .text-xl {
+            font-size: 1.25rem;
+            /* Desktop */
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+
+            /* Font Sizes */
+            .text-5xl {
+                font-size: 2rem;
+                /* Smaller on mobile */
+            }
+
+            .text-3xl {
+                font-size: 1.5rem;
+            }
+
+            .text-xl {
+                font-size: 1.1rem;
+            }
+
+            /* Two-column layout for booking form */
+            .form-group {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            /* Adjust modal sizes */
+            .modal-content-booking {
+                width: 90%;
+                max-width: 100%;
+            }
+
+            /* Schedule grid adjustments */
+            .schedule-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                /* 2 columns */
+            }
+
+            /* Weekly schedule adjustments */
+            .weekly-schedule-container {
+                overflow-x: auto;
+            }
+
+            .weekly-schedule-table {
+                min-width: 700px;
+            }
+        }
+
+        /* Extra Small Devices */
+        @media (max-width: 576px) {
+            .text-5xl {
+                font-size: 1.75rem;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+                /* Single column on very small screens */
+                gap: 0.5rem;
+            }
+
+            /* Button adjustments */
+            .btn-primary-custom {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            /* Modal content adjustments */
+            .modal-content-booking {
+                padding: 1rem;
+            }
+        }
+
+        /* Form Styling */
+        .form-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group div {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Button Styling */
+        .btn-primary-custom {
+            background-color: #4CAF50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #45a049;
+        }
+
+        /* Modal Responsiveness */
+        @media (max-width: 768px) {
+            .modal-content-booking.max-w-lg {
+                width: 90%;
+            }
+
+            #finalBookingDetails {
+                padding: 1rem;
+            }
+
+            .confirmation-confirm-btn,
+            .confirmation-cancel-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Schedule Grid */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            /* Default 4 columns */
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .schedule-grid {
+                grid-template-columns: repeat(3, 1fr);
+                /* 3 columns on tablet */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .schedule-grid {
+                grid-template-columns: repeat(2, 1fr);
+                /* 2 columns on mobile */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .schedule-grid {
+                grid-template-columns: 1fr;
+                /* 1 column on very small screens */
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .fc-daygrid-day-frame {
+                height: 80px !important;
+                min-height: 80px !important;
+            }
+
+            .fc-daygrid-day-events {
+                max-height: calc(80px - 20px);
+            }
+
+            .fc-toolbar-title {
+                font-size: 1.2rem !important;
+            }
+
+            .fc-event {
+                font-size: 10px;
+                /* Ukuran font diperkecil untuk event */
+                padding: 1px 2px;
+            }
+        }
+
+        .btn-primary-custom {
+            background-color: var(--usf-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #557aa8ff;
+        }
+
+        .swal2-popup {
+            background-color: #2f343e !important;
+            color: #dbe0e9 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+            padding: 1.5rem !important;
+        }
+
+        .swal2-title {
+            color: #dbe0e9 !important;
+            font-weight: bold !important;
+            font-size: 1.5rem !important;
+        }
+
+        .swal2-html-container {
+            color: #a7b0bf !important;
+            font-size: 1rem !important;
+            margin: 1rem 0 !important;
+        }
+
+        .swal2-actions {
+            margin-top: 1.5rem !important;
+            gap: 1rem;
+        }
+
+        .swal2-confirm.swal2-styled,
+        .swal2-cancel.swal2-styled {
+            font-weight: bold !important;
+            padding: 0.6rem 1.2rem !important;
+            border-radius: 8px !important;
+            border: none !important;
+        }
+
+        .swal2-confirm.swal2-styled {
+            background-color: #4a90e2 !important;
+            color: white !important;
+        }
+
+        .swal2-confirm.swal2-styled:hover {
+            background-color: #5d9ee5 !important;
+        }
+
+        .swal2-cancel.swal2-styled {
+            background-color: #6c757d !important;
+            color: white !important;
+        }
+
+        .swal2-cancel.swal2-styled:hover {
+            background-color: #5a6268 !important;
+        }
+
+        .swal2-close {
+            top: 0.5rem !important;
+            right: 0.5rem !important;
+            color: #dbe0e9 !important;
+            font-size: 2rem !important;
+            transition: color 0.3s ease !important;
+        }
+
+        .swal2-close:hover {
+            color: #ffd600 !important;
+        }
+
+        /* Tambahan CSS untuk tombol Batal dan Pesan Sekarang di konfirmasi akhir */
+        .confirmation-cancel-btn {
+            background-color: #dc3545;
+            /* Merah */
+            color: white;
+            font-weight: bold;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .confirmation-cancel-btn:hover {
+            background-color: #c82333;
+            /* Merah lebih gelap */
+        }
+
+        .confirmation-confirm-btn {
+            background-color: #28a745;
+            /* Hijau */
+            color: white;
+            font-weight: bold;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .confirmation-confirm-btn:hover {
+            background-color: #218838;
+            /* Hijau lebih gelap */
+        }
+
+        /* CSS BARU UNTUK MODAL VIDEO */
+        .modal-header-video {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .modal-header-video h3 {
+            margin-bottom: 0;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .modal-header-video .close-btn {
+            position: static;
+            font-size: 2rem;
+        }
+
+        /* === Gaya untuk Admin Edit Inline === */
+        .admin-editable-text {
+            <?php if ($is_admin_mode): ?>border: 2px dashed #007bffff;
+            padding: 5px;
+            display: inline-block;
+            cursor: pointer;
+            <?php endif; ?>
+        }
+
+        .admin-editable-text:hover {
+            <?php if ($is_admin_mode): ?>cursor: pointer;
+            border-color: #ffc107;
+            <?php endif; ?>
+        }
+
+        .admin-editable-image {
+            <?php if ($is_admin_mode): ?>border: 2px dashed #007bff;
+            padding: 5px;
+            display: inline-block;
+            cursor: pointer;
+            <?php endif; ?>
+        }
+
+        .admin-editable-image:hover {
+            <?php if ($is_admin_mode): ?>cursor: pointer;
+            border-color: #ffc107;
+            <?php endif; ?>
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
