@@ -1387,6 +1387,21 @@ border-color: #ffc107;
 </style>
 </head>
 <body class="bg-black text-white <?php echo $is_admin_mode ? 'is-admin-mode' : ''; ?>">
+    <header class="header" id="main-header">
+    <div class="header-inner container">
+        <a href="#" class="logo">
+            <img src="logom.png" alt="Logo">
+        </a>
+        <nav class="navbar-menu">
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link">Home</a></li>
+                <li><a href="#booking-section" class="nav-link">Book</a></li>
+                <li><a href="#gallery-section" class="nav-link">Gallery</a></li>
+                <li><a href="#map-section" class="nav-link">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 <section id="home-section" class="hero-section admin-editable-image"
     style="background-image: url('<?php echo get_content('home_bg_image', 'CZX.jpg'); ?>');"
     data-key="home_bg_image">
@@ -1677,18 +1692,21 @@ data-key="book_heading">
     <div class="min-h-screen flex items-center px-6 py-12 relative" >
    <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-20">
     <div class="text-white max-w-xl pl-4 md:pl-12">
-     <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold"
-    data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
-    style="font-family: 'Saira', sans-serif;"
-    <?php echo $is_admin_mode ? 'contenteditable="true" class="admin-editable-text"' : ''; ?>
-    data-key="about_full_heading">
-    <span style="color: #5fa140ff;">
-        <?php echo get_content('ab_head', 'MGD Soccer Field'); ?>
-    </span>
-    <span class="text-white">
-        <?php echo get_content('about_heading1', 'Magelang'); ?>
-    </span>
+     <h1 class="text-[50.56px] leading-[80px] font-normal mb-6 text-shadow fw-bold
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"
+style="font-family: 'Saira', sans-serif; color: #5fa140ff;"
+<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>
+data-key="about_heading">
+<?php echo get_content('heading', 'MGD Soccer Field'); ?>
+<span class="text-white
+<?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
+data-key="about_heading1"
+<?php echo $is_admin_mode ? 'contenteditable="true"' : ''; ?>>
+<?php echo get_content('about_heading1', 'Magelang'); ?>
+</span>
 </h1>
+
 <p class="text-[27px] leading-[36px] font-normal text-white mb-6 text-shadow
 <?php echo $is_admin_mode ? 'admin-editable-text' : ''; ?>"
 data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000"
