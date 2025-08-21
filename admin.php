@@ -2,7 +2,6 @@
 session_start();
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("location: login.php");
-    exit;
 }
 include "conn.php";
 global $conn;
@@ -98,7 +97,7 @@ $conn->close();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin | Dashboard</title>
+    <title>Admin | Beranda</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/fontawesome-free/css/all.min.css">
@@ -145,6 +144,7 @@ $conn->close();
         #calendar {
             height: 900px;
             overflow: hidden;
+            
         }
 
         /* Set tinggi semua baris tanggal menjadi 120px */
@@ -160,6 +160,16 @@ $conn->close();
             /* 30px untuk header tanggal */
             margin-right: 2px;
         }
+        /* Warna teks judul event */
+.fc-event-title {
+  color: white !important;
+}
+
+/* Warna teks jam event */
+.fc-event-time {
+  color: white !important;
+}
+
 
         /* Header tanggal */
         .fc-daygrid-day-top {
@@ -185,6 +195,17 @@ $conn->close();
             height: 120px !important;
         }
 
+        .fc-daygrid-day-number {
+  color: white !important; /* warna teks tanggal */
+  font-size: 25px;
+}
+
+        .fc-col-header-cell-cushion {
+  color: white !important;
+  font-size: 25px;
+}
+
+
         /* Style untuk detail status di modal */
         #detailStatus {
             padding: 3px 8px;
@@ -201,6 +222,110 @@ $conn->close();
             color: #f7c948;
             background-color: #3a2f1e;
         }
+
+        /* Mobile First Approach */
+@media (max-width: 576px) {
+  /* Layout Utama */
+  .wrapper {
+    flex-direction: column;
+  }
+  
+  /* Sidebar */
+  .main-sidebar {
+    width: 100%;
+    position: fixed;
+    height: 60px;
+    overflow: hidden;
+    z-index: 1000;
+    transition: height 0.3s;
+  }
+  
+  .main-sidebar.sidebar-open {
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Konten Utama */
+  .content-wrapper {
+    margin-top: 60px;
+    padding: 10px;
+  }
+  
+  /* Statistik Box */
+  .small-box {
+    margin-bottom: 10px;
+  }
+  
+  .small-box .inner h4 {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  .small-box .inner h3 {
+    font-size: 22px;
+  }
+  
+  /* Kalender */
+  #calendar {
+    height: 400px;
+    margin-top: 10px;
+  }
+  
+  .fc-header-toolbar {
+    flex-direction: column;
+    padding: 5px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 18px !important;
+    margin: 5px 0;
+  }
+  
+  .fc-daygrid-day-frame {
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+  
+  .fc-daygrid-day-number {
+    font-size: 14px !important;
+    padding: 2px !important;
+  }
+  
+  .fc-col-header-cell-cushion {
+    font-size: 12px !important;
+    padding: 5px 2px !important;
+  }
+  
+  /* Modal */
+  .modal-dialog {
+    margin: 10px auto;
+    max-width: 95%;
+  }
+  
+  .modal-content {
+    padding: 10px;
+  }
+}
+
+/* Tombol Toggle Menu Mobile */
+.mobile-menu-toggle {
+  display: block;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1100;
+  background: #343a40;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+@media (min-width: 577px) {
+  .mobile-menu-toggle {
+    display: none;
+  }
+}
     </style>
 </head>
 
@@ -213,7 +338,7 @@ $conn->close();
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="index3.html" class="brand-link">
                 <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
-                <span class="brand-text font-weight-light">MGD Soccer Field</span>
+                <span class="brand-text font-weight-light"><br></span>
             </a>
 
             <div class="sidebar">
@@ -225,24 +350,19 @@ $conn->close();
                     </div>
                 </div>
 
-                <div class="form-inline">
-                    <div class="input-group" data-widget="sidebar-search">
-                        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-                        <div class="input-group-append">
-                            <button class="btn btn-sidebar">
-                                <i class="fas fa-search fa-fw"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item">
+  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+    <i class="fas fa-bars"></i>
+  </a>
+</li>
+
                         <li class="nav-item">
                         <li class="nav-item">
                             <a href="admin.php" class="nav-link active">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p>Dashboard</p>
+                                <p>Beranda</p>
                             </a>
                         </li>
                         </li>
@@ -251,7 +371,7 @@ $conn->close();
                             <a href="tab_booking.php" class="nav-link">
                                 <i class="nav-icon fas fa-th"></i>
                                 <p>
-                                    Booking
+                                    Pesanan
                                 </p>
                             </a>
                         </li>
@@ -260,24 +380,22 @@ $conn->close();
                             <a href="history.php" class="nav-link">
                                 <i class="nav-icon fas fa-chart-pie"></i>
                                 <p>
-                                    Histori
+                                    Riwayat
                                 </p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="update_web.php" class="nav-link">
+                            <a href="manage_content.php" class="nav-link">
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
-                                    Web Update
-                                </p>
-                            </a>
+                                    Kelolah Website
                         </li>
 
                         <li class="nav-item">
                             <a href="logout.php" class="nav-link">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
-                                <p>Logout</p>
+                                <p>Keluar</p>
                             </a>
                         </li>
                     </ul>
@@ -297,7 +415,7 @@ $conn->close();
                             <div class="small-box bg-warning">
                                 <div class="inner">
                                     <h4><b>Menunggu</b></h4>
-                                    <h3><?=$jumlahProses?></h3>
+                                    <h3><?=$jumlahMenunggu?></h3>
                                 </div><br>
                                 <div class="icon"><i class="ion ion-loop"></i></div>
                             </div>
@@ -448,4 +566,4 @@ $conn->close();
     </script>
 
 </body>
-
+</html>
