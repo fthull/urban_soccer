@@ -182,17 +182,11 @@ $GLOBALS['is_admin_mode'] = true;
             </div>
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <li class="nav-item">
-  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
-
-                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Beranda</p></a></li>
-                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Pesanan</p></a></li>
-                    <li class="nav-item"><a href="history.php" class="nav-link"><i class="nav-icon fas fa-chart-pie"></i><p>Riwayat</p></a></li>
-                    <li class="nav-item"><a href="manage_content.php" class="nav-link active"><i class="nav-icon fas fa-desktop"></i><p>Kelola Website</p></a></li>
-                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Keluar</p></a></li>
+                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Dashboard</p></a></li>
+                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Booking</p></a></li>
+                    <li class="nav-item"><a href="history.php" class="nav-link"><i class="nav-icon fas fa-chart-pie"></i><p>History</p></a></li>
+                    <li class="nav-item"><a href="manage_content.php" class="nav-link active"><i class="nav-icon fas fa-desktop"></i><p>Manage Website</p></a></li>
+                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Logout</p></a></li>
                 </ul>
             </nav>
         </div>

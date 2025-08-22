@@ -93,9 +93,9 @@ $bookedAll = 0;
 $bookedToday = 0;
 
 $stmt_stats = $conn->prepare("SELECT 
-    (SELECT COUNT(*) FROM booking WHERE status = 'Menunggu') AS jumlahMenunggu,
-    (SELECT COUNT(*) FROM booking WHERE status = 'Booked') AS bookedAll,
-    (SELECT COUNT(*) FROM booking WHERE status = 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now() = 'Menunggu') AS jumlahMenunggu ,
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now()= 'Booked') AS bookedAll ,
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now()= 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
 ");
 
 if ($stmt_stats) {
@@ -121,14 +121,14 @@ $is_search_active = !empty($search_query);
 
 if ($is_search_active) {
     // Jika ada kata kunci pencarian, ambil data yang lebih ringkas
-    $stmt = $conn->prepare("SELECT id, nama, sewa_sepatu, sewa_rompi, total_harga FROM booking WHERE nama LIKE ? ORDER BY tanggal DESC, waktu DESC");
+    $stmt = $conn->prepare("SELECT id, nama, sewa_sepatu, sewa_rompi, total_harga FROM booking WHERE nama LIKE ? and waktu >= now() ORDER BY tanggal DESC, waktu DESC");
     $search_param = '%' . $search_query . '%';
     $stmt->bind_param("s", $search_param);
     $stmt->execute();
     $result2 = $stmt->get_result();
 } else {
     // Jika tidak ada kata kunci, ambil data normal
-    $sql_booking = "SELECT id, nama, no_hp, tanggal, waktu, status, bukti_pembayaran FROM booking ORDER BY tanggal DESC, waktu DESC";
+    $sql_booking = "SELECT id, nama, no_hp, tanggal, waktu, status, bukti_pembayaran FROM booking where waktu >=now() ORDER BY tanggal DESC, waktu DESC";
     $result2 = $conn->query($sql_booking);
 }
 
@@ -195,6 +195,79 @@ if ($result2) {
             display: block;
             margin: auto;
         }
+
+        /* Style untuk modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+        }
+        
+        /* Animasi untuk zoom */
+        @keyframes zoom {
+            from {transform: translate(-50%, -50%) scale(0)}
+            to {transform: translate(-50%, -50%) scale(1)}
+        }
+        
+        .modal-content {
+            animation-name: zoom;
+            animation-duration: 0.3s;
+        }
+
+        .mobile-logout {
+    display: none;
+}
+        @media (max-width: 767px) {
+    .mobile-logout {
+        display: flex;
+        justify-content: right; 
+        margin-top: 10px;
+    }
+
+    .mobile-logout form {
+        display: flex;
+        width: 15%;
+        justify-content: center;
+    }
+
+    .mobile-logout button {
+        flex: 1; /* biar tombol fleksibel lebarnya */
+        max-width: 200px; /* batas maksimal biar nggak kepanjangan */
+    }
+}
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
@@ -215,17 +288,11 @@ if ($result2) {
             
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                    <li class="nav-item">
-  <a class="nav-link " data-widget="pushmenu" href="#" role="active">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
-
-                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Beranda</p></a></li>
-                    <li class="nav-item"><a href="tab_booking.php" class="nav-link active"><i class="nav-icon fas fa-th"></i><p>Pesanan</p></a></li>
-                    <li class="nav-item"><a href="history.php" class="nav-link"><i class="nav-icon fas fa-chart-pie"></i><p>Riwayat</p></a></li>
-                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Kelola Website</p></a></li>
-                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Keluar</p></a></li>
+                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Dashboard</p></a></li>
+                    <li class="nav-item"><a href="tab_booking.php" class="nav-link active"><i class="nav-icon fas fa-th"></i><p>Booking</p></a></li>
+                    <li class="nav-item"><a href="history.php" class="nav-link"><i class="nav-icon fas fa-chart-pie"></i><p>Histori</p></a></li>
+                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Manage Website</p></a></li>
+                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Logout</p></a></li>
                 </ul>
             </nav>
         </div>
@@ -237,22 +304,16 @@ if ($result2) {
                     <div class="col-sm-6">
                         <h1 class="m-0">Booking</h1>
                     </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Booking</li>
-                        </ol>
-                    </div>
                 </div>
             </div>
         </div>
         <section class="content">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Menunggu</b></h4><h3><?=$jumlahMenunggu?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Process</b></h4><h3><?=$jumlahMenunggu?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h4><b>Booked All</b></h4><h3><?=$bookedAll?></h3></div><br><div class="icon"><i class="ion ion-calendar"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booked Today</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
-                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Total Booking</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Orders</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
                 </div>
                 <div class="row">
                     <div class="col-12">
@@ -296,16 +357,16 @@ if ($result2) {
                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
                                 <td>
                                     <?php if (!empty($row['bukti_pembayaran'])): ?>
-                                        <a href="uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>" target="_blank">
-                                            <img src="uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>" alt="Bukti Pembayaran" style="width:100px; height:auto; display:block; margin:auto;">
-                                        </a>
-                                    <?php else: ?>
-                                        Tidak Ada Bukti
-                                    <?php endif; ?>
+        <a href="#" onclick="openModal('uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>')">
+            <img src="uploads/<?= htmlspecialchars($row['bukti_pembayaran']) ?>" alt="Bukti Pembayaran" style="width:100px; height:auto; display:block; margin:auto; cursor: pointer;">
+        </a>
+    <?php else: ?>
+        <p>Tidak ada bukti pembayaran</p>
+    <?php endif; ?>
                                 </td>
                                 <td>
                                     <select class="status-select <?= strtolower($row['status']) ?>" onchange="ubahStatus(<?= htmlspecialchars($row['id']) ?>, this.value)">
-                                        <option value="Menunggu" <?= ($row['status'] == 'Menunggu') ? 'selected' : '' ?>>Menunggu</option>
+                                        <option value="Menunggu" <?= ($row['status'] == 'Menunggu') ? 'selected' : '' ?>>Process</option>
                                         <option value="Booked" <?= ($row['status'] == 'Booked') ? 'selected' : '' ?>>Booked</option>
                                     </select>
                                 </td>
@@ -326,6 +387,10 @@ if ($result2) {
                             <?php endif; ?>
                         </tbody>
                     </table>
+                    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
                 </div>
                 <div class="export-section fw-bold">
                     <h3>Export Data Booking</h3>
@@ -335,6 +400,13 @@ if ($result2) {
                         </button>
                     </form>
                 </div>
+                <div class="mobile-logout">
+        <form action="logout.php" method="post">
+            <button type="submit" class="btn btn-danger w-100">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </form>
+    </div>
             </div>
         </section>
     </div><br>
@@ -416,6 +488,39 @@ if ($result2) {
         const preloader = document.querySelector('.preloader');
         if (preloader) { preloader.style.display = 'none'; }
     });
+
+     // Fungsi untuk membuka modal dan menampilkan gambar
+        function openModal(imageSrc) {
+            const modal = document.getElementById("imageModal");
+            const modalImg = document.getElementById("modalImage");
+            
+            modal.style.display = "block";
+            modalImg.src = imageSrc;
+            
+            // Tambahkan event listener untuk menutup modal dengan tombol ESC
+            document.addEventListener('keydown', handleKeyPress);
+        }
+        
+        // Fungsi untuk menutup modal
+        function closeModal() {
+            document.getElementById("imageModal").style.display = "none";
+            // Hapus event listener ketika modal ditutup
+            document.removeEventListener('keydown', handleKeyPress);
+        }
+        
+        // Fungsi untuk menangani penekanan tombol ESC
+        function handleKeyPress(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        }
+        
+        // Tutup modal ketika mengklik di luar gambar
+        document.getElementById('imageModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
 </script>
 </body>
 </html>

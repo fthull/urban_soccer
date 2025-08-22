@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-// Alihkan ke halaman admin jika sudah login
-if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-    header("location: admin.php");
-    exit;
-}
-
 // Sertakan file koneksi database
 require_once "conn.php";
 $login_err = "";
@@ -37,7 +31,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION['id'] = $id;
                             $_SESSION['username'] = $username;
 
-                            header("location: admin.php");
+                            // --- cek device di sini ---
+                            if (isMobileDevice()) {
+                                header("Location: tab_booking.php");
+                            } else {
+                                header("Location: admin.php");
+                            }
                             exit;
                         } else {
                             $login_err = "Username atau password salah.";
@@ -54,8 +53,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+
+function isMobileDevice() {
+    $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+    $mobileAgents = array(
+        'android', 'iphone', 'ipad', 'ipod', 'blackberry',
+        'opera mini', 'windows phone', 'mobile', 'tablet'
+    );
+
+    foreach ($mobileAgents as $agent) {
+        if (strpos($userAgent, $agent) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">

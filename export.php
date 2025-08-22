@@ -7,7 +7,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 // Query data
-$query = "SELECT * FROM booking where status = 'booked'";
+$query = "SELECT * FROM booking";
 $result = $conn->query($query);
 
 // Buat spreadsheet baru
@@ -29,7 +29,7 @@ $sheet->setCellValue('A'.$row, $row - 1);
     $sheet->setCellValue('B'.$row, $data['nama']);
     $sheet->setCellValue('C'.$row, $data['no_hp']);
     $sheet->setCellValue('D'.$row, $data['waktu']);
-    $sheet->setCellValue('E'.$row, $data['status']);
+    $sheet->setCellValue('F'.$row, $data['status']);
     $row++;
 }
 

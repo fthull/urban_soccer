@@ -10,7 +10,7 @@ global $conn;
 if (isset($_GET['load'])) {
     header('Content-Type: application/json');
     $events = [];
-    $result = $conn->query("SELECT id, nama, waktu, status FROM booking ORDER BY waktu ASC, tanggal ASC");
+    $result = $conn->query("SELECT id, nama, waktu, status FROM booking where waktu>= now() ORDER BY waktu ASC, tanggal ASC");
 
    while ($row = $result->fetch_assoc()) {
     $status = $row['status'] === 'Booked' ? 'Booked' : 'Menunggu';
@@ -45,7 +45,7 @@ if (isset($_GET['booking_id'])) {
     header('Content-Type: application/json');
     $id = intval($_GET['booking_id']);
 
-   $stmt = $conn->prepare("SELECT id, nama, no_hp, tanggal, waktu, status FROM booking WHERE id = ?");
+   $stmt = $conn->prepare("SELECT id, nama, no_hp, tanggal, waktu, status FROM booking WHERE id = ? and waktu >=now()");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -70,9 +70,9 @@ $bookedAll = 0;
 $bookedToday = 0;
 
 $stmt_stats = $conn->prepare("SELECT 
-    (SELECT COUNT(*) FROM booking WHERE status = 'Menunggu') AS jumlahProses,
-    (SELECT COUNT(*) FROM booking WHERE status = 'Booked') AS bookedAll,
-    (SELECT COUNT(*) FROM booking WHERE status = 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now() = 'Menunggu') AS jumlahProses,
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now()= 'Booked') AS bookedAll,
+    (SELECT COUNT(*) FROM booking WHERE status and waktu >=now()= 'Booked' AND DATE(tanggal) = CURDATE()) AS bookedToday
 ");
 
 if ($stmt_stats) {
@@ -352,17 +352,12 @@ $conn->close();
 
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
 
                         <li class="nav-item">
                         <li class="nav-item">
                             <a href="admin.php" class="nav-link active">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p>Beranda</p>
+                                <p>Dashboard</p>
                             </a>
                         </li>
                         </li>
@@ -371,7 +366,7 @@ $conn->close();
                             <a href="tab_booking.php" class="nav-link">
                                 <i class="nav-icon fas fa-th"></i>
                                 <p>
-                                    Pesanan
+                                    Booking
                                 </p>
                             </a>
                         </li>
@@ -380,7 +375,7 @@ $conn->close();
                             <a href="history.php" class="nav-link">
                                 <i class="nav-icon fas fa-chart-pie"></i>
                                 <p>
-                                    Riwayat
+                                    History
                                 </p>
                             </a>
                         </li>
@@ -389,13 +384,13 @@ $conn->close();
                             <a href="manage_content.php" class="nav-link">
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
-                                    Kelolah Website
+                                    Manage Website
                         </li>
 
                         <li class="nav-item">
                             <a href="logout.php" class="nav-link">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
-                                <p>Keluar</p>
+                                <p>Logout</p>
                             </a>
                         </li>
                     </ul>
@@ -414,8 +409,8 @@ $conn->close();
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h4><b>Menunggu</b></h4>
-                                    <h3><?=$jumlahMenunggu?></h3>
+                                    <h4><b>Process</b></h4>
+                                    <h3><?=$jumlahProses?></h3>
                                 </div><br>
                                 <div class="icon"><i class="ion ion-loop"></i></div>
                             </div>
@@ -441,7 +436,7 @@ $conn->close();
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-danger">
                                 <div class="inner">
-                                    <h4><b>Total Booking</b></h4>
+                                    <h4><b>Orders</b></h4>
                                     <h3><?=$totalBookings?></h3>
                                 </div><br>
                                 <div class="icon"><i class="ion ion-ios-list"></i></div>

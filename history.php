@@ -27,7 +27,7 @@ if ($stmt_total) {
 }
 
 // Menghitung booking yang sudah Selesai (sudah lewat waktunya)
-$query_selesai = "SELECT COUNT(*) AS bookedSelesai FROM booking WHERE waktu < CURDATE() AND status = 'Selesai'";
+$query_selesai = "SELECT COUNT(*) AS bookedSelesai FROM booking WHERE waktu < CURDATE() AND status = 'Booked'";
 $stmt_selesai = $conn->prepare($query_selesai);
 if ($stmt_selesai) {
     $stmt_selesai->execute();
@@ -114,16 +114,11 @@ $result = $stmt->get_result();
             
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                    <li class="nav-item">
-  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
-                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Beranda</p></a></li>
-                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Pesanan</p></a></li>
-                    <li class="nav-item"><a href="history.php" class="nav-link active"><i class="nav-icon fas fa-chart-pie"></i><p>Riwayat</p></a></li>
-                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Kelola Website</p></a></li>
-                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Keluar</p></a></li>
+                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Dashboard</p></a></li>
+                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Booking</p></a></li>
+                    <li class="nav-item"><a href="history.php" class="nav-link active"><i class="nav-icon fas fa-chart-pie"></i><p>History</p></a></li>
+                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Manage Website</p></a></li>
+                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Logout</p></a></li>
                 </ul>
             </nav>
         </div>
@@ -136,12 +131,6 @@ $result = $stmt->get_result();
                     <div class="col-sm-6">
                         <h1 class="m-0">Histori</h1>
                     </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Histori</li>
-                        </ol>
-                    </div>
                 </div>
             </div>
         </div>
@@ -151,7 +140,7 @@ $result = $stmt->get_result();
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-warning">
                             <div class="inner">
-                                <h4><b>Menunggu</b></h4>
+                                <h4><b>Process</b></h4>
                                 <h3><?= $bookedMenunggu ?></h3>
                             </div>
                             <br>
@@ -163,24 +152,12 @@ $result = $stmt->get_result();
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-success">
                             <div class="inner">
-                                <h4><b>Selesai</b></h4>
+                                <h4><b>Finish</b></h4>
                                 <h3><?= $bookedSelesai ?></h3>
                             </div>
                             <br>
                             <div class="icon">
                                 <i class="ion ion-checkmark-round"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box bg-danger">
-                            <div class="inner">
-                                <h4><b>Ditolak</b></h4>
-                                <h3><?= $bookedDitolak ?></h3>
-                            </div>
-                            <br>
-                            <div class="icon">
-                                <i class="ion ion-close-round"></i>
                             </div>
                         </div>
                     </div>
@@ -214,6 +191,7 @@ $result = $stmt->get_result();
                                                 <th>No HP</th>
                                                 <th>Jam</th>
                                                 <th>Tanggal</th>
+                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -227,6 +205,8 @@ $result = $stmt->get_result();
                                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
                                                 <td><?= date('H:i', strtotime($row['waktu'])) ?></td>
                                                 <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
+                                                <td><?= htmlspecialchars($row['status']) ?></td>
+
                                             </tr>
                                             <?php endwhile; ?>
                                         </tbody>
