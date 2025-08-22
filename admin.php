@@ -337,56 +337,13 @@ $conn->close();
         <br>
         <br>
 
-        <div class="content-wrapper">
-            <section class="content">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h4><b>Process</b></h4>
-                                    <h3><?=$jumlahProses?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-loop"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h4><b>Booked All</b></h4>
-                                    <h3><?=$bookedAll?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-calendar"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h4><b>Booked Today</b></h4>
-                                    <h3><?=$bookedToday?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-checkmark-round"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-danger">
-                                <div class="inner">
-                                    <h4><b>Orders</b></h4>
-                                    <h3><?=$totalBookings?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-ios-list"></i></div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
         <section class="content">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Menunggu</b></h4><h3><?=$jumlahProses?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
-                    <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h4><b>Booked</b></h4><h3><?=$bookedAll?></h3></div><br><div class="icon"><i class="ion ion-calendar"></i></div></div></div>
-                    <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booking Hari Ini</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
-                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Total Booking</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Process</b></h4><h3><?=$jumlahProses?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h4><b>Booked All</b></h4><h3><?=$bookedAll?></h3></div><br><div class="icon"><i class="ion ion-calendar"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booking Today</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Orders</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
                 </div>
 
                     <div id="calendar"></div>

@@ -1,7 +1,6 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <a href="index3.html" class="brand-link">
         <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
-        <span class="brand-text font-weight-light">MGD Soccer Field</span>
     </a>
 <br>
 <br>
@@ -17,7 +16,7 @@
                 <li class="nav-item">
                     <a href="tab_booking.php" class="nav-link <?php if ($active_page == 'pesanan') echo 'active'; ?>">
                         <i class="nav-icon fas fa-book"></i>
-                        <p>Pesanan</p>
+                        <p>Booking</p>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -29,7 +28,7 @@
                 <li class="nav-item">
                     <a href="manage_content.php" class="nav-link <?php if ($active_page == 'kelola-website') echo 'active'; ?>">
                         <i class="nav-icon fas fa-edit"></i>
-                        <p>Kelola Website</p>
+                        <p>Manage Website</p>
                     </a>
                 </li>
                 <li class="nav-item">

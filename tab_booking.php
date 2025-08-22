@@ -293,13 +293,12 @@ if ($result2) {
                     <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booked Today</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
                     <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Orders</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
                 </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="form-group">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Cari berdasarkan nama..." value="<?= htmlspecialchars($search_query) ?>">
-                        </div>
-                    </div>
-                </div>
+                <!-- Form Pencarian -->
+<div class="input-group mb-4">
+    <input type="text" id="search" name="search" class="form-control"
+           placeholder="Cari berdasarkan nama...">
+</div>
+
                 <div style="max-height: 500px; overflow-y: auto;">
                     <table class="table table-bordered table-striped">
                         <thead class="table-secondary" style="position: sticky; top: 0; z-index: 1;">
@@ -320,7 +319,7 @@ if ($result2) {
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="history-body">
                             <?php
                             $no = 1;
                             if (!empty($bookingDetail)):
@@ -448,19 +447,14 @@ if ($result2) {
         }
     }
 
-    // Event listener untuk input pencarian
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const query = this.value;
-        const currentUrl = new URL(window.location.href);
-        
-        if (query) {
-            currentUrl.searchParams.set('q', query);
-        } else {
-            currentUrl.searchParams.delete('q');
-        }
-        window.location.href = currentUrl.toString();
+    $(document).ready(function(){
+    $("#search").on("keyup", function(){
+        let keyword = $(this).val();
+        $.get("search.php", { search: keyword }, function(data){
+            $("#histori-body").html(data);
+        });
     });
-
+});
     // Menghilangkan preloader saat halaman selesai dimuat
     window.addEventListener('load', function () {
         const preloader = document.querySelector('.preloader');

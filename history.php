@@ -65,6 +65,25 @@ $query = "SELECT * FROM booking WHERE waktu < CURDATE() ORDER BY waktu DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
 $result = $stmt->get_result();
+
+$bookingDetail = [];
+$sql_booking = "SELECT * FROM booking WHERE waktu >= NOW() ORDER BY tanggal ASC, waktu ASC LIMIT 10";
+$result2 = $conn->query($sql_booking);
+$search_query = $_GET['q'] ?? '';
+$is_search_active = !empty($search_query);
+
+if ($is_search_active) {
+    // Jika ada kata kunci pencarian, ambil data yang lebih ringkas
+    $stmt = $conn->prepare("SELECT id, nama, sewa_sepatu, sewa_rompi, total_harga FROM booking WHERE nama LIKE ? and waktu >= now() ORDER BY tanggal DESC, waktu DESC");
+    $search_param = '%' . $search_query . '%';
+    $stmt->bind_param("s", $search_param);
+    $stmt->execute();
+    $result2 = $stmt->get_result();
+} else {
+    // Jika tidak ada kata kunci, ambil data normal
+    $sql_booking = "SELECT id, nama, no_hp, tanggal, waktu, status, bukti_pembayaran FROM booking where waktu >=now() ORDER BY tanggal DESC, waktu DESC";
+    $result2 = $conn->query($sql_booking);
+}
 ?>
 
 <!DOCTYPE html>
@@ -146,7 +165,7 @@ $result = $stmt->get_result();
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-info">
                             <div class="inner">
-                                <h4><b>Total Riwayat</b></h4>
+                                <h4><b>History</b></h4>
                                 <h3><?= $totalRiwayat ?></h3>
                             </div>
                             <br>
@@ -164,6 +183,12 @@ $result = $stmt->get_result();
                                 <h3 class="card-title">Tabel Histori Booking</h3>
                             </div>
                             <div class="card-body">
+<!-- Form Pencarian -->
+<div class="input-group mb-4">
+    <input type="text" id="search" name="search" class="form-control"
+           placeholder="Cari berdasarkan nama...">
+</div>
+
                                 <div style="max-height: 500px; overflow-y: auto;">
                                     <table class="table table-bordered table-striped">
                                         <thead class="table-secondary">
@@ -176,7 +201,7 @@ $result = $stmt->get_result();
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="histori-body">
                                             <?php
                                             $no = 1;
                                             while ($row = $result->fetch_assoc()):
@@ -231,6 +256,17 @@ $result = $stmt->get_result();
         const preloader = document.querySelector('.preloader');
         if (preloader) { preloader.style.display = 'none'; }
     });
+
+$(document).ready(function(){
+    $("#search").on("keyup", function(){
+        let keyword = $(this).val();
+        $.get("search.php", { search: keyword }, function(data){
+            $("#histori-body").html(data);
+        });
+    });
+});
+
+
 </script>
 </body>
 </html>
