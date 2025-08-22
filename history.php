@@ -5,6 +5,7 @@
 session_start();
 include "conn.php";
 global $conn;
+$active_page = 'history';
 
 // Ambil waktu saat ini
 $now = date('Y-m-d H:i:s');
@@ -102,28 +103,9 @@ $result = $stmt->get_result();
       <div class="preloader flex-column justify-content-center align-items-center">
         <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
     </div>
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="index3.html" class="brand-link">
-            <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
-            <span class="brand-text font-weight-light"><br></span>
-        </a>
-        <div class="sidebar">
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                <div class="info"><a href="#" class="d-block"></a></div>
-            </div>
-            
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Dashboard</p></a></li>
-                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Booking</p></a></li>
-                    <li class="nav-item"><a href="history.php" class="nav-link active"><i class="nav-icon fas fa-chart-pie"></i><p>History</p></a></li>
-                    <li class="nav-item"><a href="manage_content.php" class="nav-link"><i class="nav-icon fas fa-desktop"></i><p>Manage Website</p></a></li>
-                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Logout</p></a></li>
-                </ul>
-            </nav>
+        <div class="wrapper">
+        <?php include 'sidebar.php'; ?>
         </div>
-    </aside>
-
     <div class="content-wrapper">
         <div class="content-header">
             <div class="container-fluid">
