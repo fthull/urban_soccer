@@ -285,7 +285,7 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-
+        }
             /* === SCHEDULE SLOTS from coba.php === */
             .schedule-grid {
                 display: grid;
@@ -530,8 +530,7 @@
                 cursor: pointer;
                 transition: background-color 0.3s ease;
             }
-        }
-
+        
         .weekly-schedule-cell.pending {
             background-color: #a79102ff;
             /* Warna hijau gelap baru */
@@ -1799,37 +1798,28 @@
                 font-size: 0.9rem;
             }
         }
+.schedule-grid {
+    display: grid;
+    /* Memberikan lebar minimum pada kolom untuk mencegah konten meluber */
+    grid-template-columns: repeat(4, minmax(200px, 1fr));
+    gap: 1rem;
+}
 
-        /* Schedule Grid */
-        .schedule-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            /* Default 4 columns */
-            gap: 0.5rem;
-            padding: 0 1rem;
-        }
+@media (max-width: 1024px) {
+    .schedule-grid {
+        /* Mengubah ke 2 kolom untuk tablet */
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+}
 
-        @media (max-width: 992px) {
-            .schedule-grid {
-                grid-template-columns: repeat(3, 1fr);
-                /* 3 columns on tablet */
-            }
-        }
-
-        @media (max-width: 768px) {
-            .schedule-grid {
-                grid-template-columns: repeat(2, 1fr);
-                /* 2 columns on mobile */
-            }
-        }
-
-        @media (max-width: 480px) {
-            .schedule-grid {
-                grid-template-columns: 1fr;
-                /* 1 column on very small screens */
-            }
-        }
-
+@media (max-width: 600px) {
+    .schedule-grid {
+        /* Mengubah ke 1 kolom untuk ponsel */
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
         /* Modal Styles */
         .modal {
             display: none;
@@ -2001,35 +1991,6 @@
         .modal-header-video .close-btn {
             position: static;
             font-size: 2rem;
-        }
-
-        /* === Gaya untuk Admin Edit Inline === */
-        .admin-editable-text {
-            <?php if ($is_admin_mode): ?>border: 2px dashed #007bffff;
-            padding: 5px;
-            display: inline-block;
-            cursor: pointer;
-            <?php endif; ?>
-        }
-
-        .admin-editable-text:hover {
-            <?php if ($is_admin_mode): ?>cursor: pointer;
-            border-color: #ffc107;
-            <?php endif; ?>
-        }
-
-        .admin-editable-image {
-            <?php if ($is_admin_mode): ?>border: 2px dashed #007bff;
-            padding: 5px;
-            display: inline-block;
-            cursor: pointer;
-            <?php endif; ?>
-        }
-
-        .admin-editable-image:hover {
-            <?php if ($is_admin_mode): ?>cursor: pointer;
-            border-color: #ffc107;
-            <?php endif; ?>
         }
 
         .hidden-file-input {

@@ -5,7 +5,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 }
 include "conn.php";
 global $conn;
-
+$active_page = 'dashboard';
 // --- Endpoint: Ambil semua event booking untuk FullCalendar ---
 if (isset($_GET['load'])) {
     header('Content-Type: application/json');
@@ -328,126 +328,34 @@ $conn->close();
 }
     </style>
 </head>
-
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
     <div class="wrapper">
-
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/logom.png" alt="AdminLTELogo" height="60" width="60">
+        <?php include 'sidebar.php'; ?>
         </div>
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="index3.html" class="brand-link">
-                <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
-                <span class="brand-text font-weight-light"><br></span>
-            </a>
-
-            <div class="sidebar">
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                    <div class="info">
-                        <a href="#" class="d-block">
-
-                        </a>
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Dashboard</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
                     </div>
                 </div>
-
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
-
-                        <li class="nav-item">
-                        <li class="nav-item">
-                            <a href="admin.php" class="nav-link active">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Beranda</p>
-                            </a>
-                        </li>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="tab_booking.php" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Pesanan
-                                </p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="history.php" class="nav-link">
-                                <i class="nav-icon fas fa-chart-pie"></i>
-                                <p>
-                                    Riwayat
-                                </p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="manage_content.php" class="nav-link">
-                                <i class="nav-icon fas fa-desktop"></i>
-                                <p>
-                                    Kelolah Website
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="logout.php" class="nav-link">
-                                <i class="nav-icon fas fa-sign-out-alt"></i>
-                                <p>Keluar</p>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
             </div>
-        </aside>
-
-        <br>
-        <br>
-        <br>
-
-        <div class="content-wrapper">
-            <section class="content">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h4><b>Menunggu</b></h4>
-                                    <h3><?=$jumlahMenunggu?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-loop"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h4><b>Booked All</b></h4>
-                                    <h3><?=$bookedAll?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-calendar"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h4><b>Booked Today</b></h4>
-                                    <h3><?=$bookedToday?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-checkmark-round"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-danger">
-                                <div class="inner">
-                                    <h4><b>Total Booking</b></h4>
-                                    <h3><?=$totalBookings?></h3>
-                                </div><br>
-                                <div class="icon"><i class="ion ion-ios-list"></i></div>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h4><b>Menunggu</b></h4><h3><?=$jumlahProses?></h3></div><br><div class="icon"><i class="ion ion-loop"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h4><b>Booked</b></h4><h3><?=$bookedAll?></h3></div><br><div class="icon"><i class="ion ion-calendar"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h4><b>Booking Hari Ini</b></h4><h3><?=$bookedToday?></h3></div><br><div class="icon"><i class="ion ion-checkmark-round"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h4><b>Total Booking</b></h4><h3><?=$totalBookings?></h3></div><br><div class="icon"><i class="ion ion-ios-list"></i></div></div></div>
+                </div>
 
                     <div id="calendar"></div>
 

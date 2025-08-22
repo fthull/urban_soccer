@@ -2,6 +2,9 @@
 session_start();
 include "conn.php";
 global $conn;
+$active_page = 'kelola-website';
+// Set variabel global untuk mengaktifkan mode admin di index.php
+$GLOBALS['is_admin_mode'] = true;
 
 // Pastikan direktori 'uploads' ada
 if (!is_dir('uploads')) {
@@ -94,9 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_content_inline
 
     exit;
 }
-
-// Set variabel global untuk mengaktifkan mode admin di index.php
-$GLOBALS['is_admin_mode'] = true;
 ?>
 
 <!DOCTYPE html>
@@ -104,7 +104,7 @@ $GLOBALS['is_admin_mode'] = true;
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin | Kelolah Website</title>
+    <title>Admin | Kelola Website</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="AdminLTE-3.1.0/plugins/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
@@ -167,37 +167,9 @@ $GLOBALS['is_admin_mode'] = true;
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed dark-mode">
-<div class="wrapper">
-      <div class="preloader flex-column justify-content-center align-items-center">
-        <img class="animation__wobble" src="AdminLTE-3.1.0/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
-    </div>
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="index3.html" class="brand-link">
-            <img src="logom.png" alt="AdminLTE Logo" class="brand-image" style="opacity: .8">
-            <span class="brand-text font-weight-light"><br></span>
-        </a>
-        <div class="sidebar">
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                <div class="info"><a href="#" class="d-block"></a></div>
-            </div>
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <li class="nav-item">
-  <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-    <i class="fas fa-bars"></i>
-  </a>
-</li>
-
-                    <li class="nav-item"><a href="admin.php" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Beranda</p></a></li>
-                    <li class="nav-item"><a href="tab_booking.php" class="nav-link"><i class="nav-icon fas fa-th"></i><p>Pesanan</p></a></li>
-                    <li class="nav-item"><a href="history.php" class="nav-link"><i class="nav-icon fas fa-chart-pie"></i><p>Riwayat</p></a></li>
-                    <li class="nav-item"><a href="manage_content.php" class="nav-link active"><i class="nav-icon fas fa-desktop"></i><p>Kelola Website</p></a></li>
-                    <li class="nav-item"><a href="logout.php" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i><p>Keluar</p></a></li>
-                </ul>
-            </nav>
+    <div class="wrapper">
+        <?php include 'sidebar.php'; ?>
         </div>
-    </aside>
-
     <div class="content-wrapper">
         <section class="content">
             <div class="container-fluid">
@@ -230,7 +202,6 @@ $GLOBALS['is_admin_mode'] = true;
 <script src="AdminLTE-3.1.0/dist/js/adminlte.js"></script>
 <script src="AdminLTE-3.1.0/dist/js/demo.js"></script>
 <script src="AdminLTE-3.1.0/dist/js/pages/dashboard.js"></script>
-
 <script>
 $(document).ready(function() {
     // --- Logika untuk Edit Teks ---
